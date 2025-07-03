@@ -11,16 +11,13 @@ import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
 import { supabase } from "@/lib/supabase/client";
+import { loadGameScenarios, type ClientScenario } from "@/lib/supabase/cardUtils";
 
 
 const DRAG_THRESHOLD = 200;
 const THROW_VELOCITY = 750;
 
-type ClientScenario = {
-	situation: string;
-	optionA: { text: string; id: number };
-	optionB: { text: string; id: number };
-};
+
 /*
 const clientScenario = (
 	situation: string,
@@ -73,31 +70,24 @@ export default function GameInterface() {
 	});
 
 	useEffect(() => {
-		fetch("/jobs.json")
-			.then((res) => res.json())
-			.then((jobs) => {
-				// Transform jobs into scenarios
-				const jobScenarios = jobs.map((job: any) => ({
-					situation: `${job.title} at ${job.company} (${job.location})`,
-					optionA: { text: "Decline", id: job.id },
-					optionB: { text: "Accept", id: job.id },
-				}));
-				setScenariosData(jobScenarios);
+		loadGameScenarios()
+			.then((scenarios) => {
+				setScenariosData(scenarios);
 				// Create array of indices for CardStack
-				setScenarios(jobScenarios.map((_: any, index: number) => index));
+				setScenarios(scenarios.map((_: any, index: number) => index));
 				// Set the first scenario as current
-				if (jobScenarios.length > 0) {
-					setCurrentScenario(jobScenarios[0]);
+				if (scenarios.length > 0) {
+					setCurrentScenario(scenarios[0]);
 					// Set up choice scenarios
 					choiseScenarios.current = {
-						optionA: jobScenarios[0],
-						optionB: jobScenarios[0],
+						optionA: scenarios[0],
+						optionB: scenarios[0],
 					};
 				}
 				setIsLoading(false);
 			})
 			.catch((error) => {
-				console.error("Failed to load jobs:", error);
+				console.error("Failed to load scenarios from database:", error);
 				setIsLoading(false);
 			});
 	}, []);
