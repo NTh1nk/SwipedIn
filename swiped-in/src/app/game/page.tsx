@@ -7,7 +7,6 @@ import {
 	useAnimation,
 	useMotionValueEvent,
 } from "framer-motion";
-import { createClient } from "../../lib/supabase/client";
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
@@ -30,10 +29,13 @@ const clientScenario = (
 	optionB: { text: optionRows[1].leading_choice, id: optionRows[1].id },
 });
 */
-	const testData = [
-
-	]
-
+const testData: ClientScenario[] = [
+	{
+		situation: "You are faced with a tough decision at work.",
+		optionA: { text: "Take the risk", id: 1 },
+		optionB: { text: "Play it safe", id: 2 },
+	},
+];
 
 const STARTING_SCENARIO_ID = 5;
 
@@ -71,40 +73,21 @@ export default function GameInterface() {
 	useEffect(() => {
 		const initializeScenario = async () => {
 			try {
-				const { data } = testData;
-				});
-
-				const generatedScenario: ClientScenario = data.data;
-				["optionA", "optionB"].map((key) => {
-					console.log(generatedScenario[key].id);
-					supabase.functions
-						.invoke("generateScenario", {
-							body: { scenarioId: generatedScenario[key].id },
-						})
-						.then((s) => {
-							console.log(key);
-							console.log(s.data.data);
-							choiseScenarios.current = {
-								...choiseScenarios.current,
-								[key]: s.data.data,
-							};
-						});
-				});
-				console.log(generatedScenario);
+				// Use the first scenario from testData as the initial scenario
+				const generatedScenario: ClientScenario = testData[0];
+				choiseScenarios.current = {
+					optionA: generatedScenario,
+					optionB: generatedScenario,
+				};
 				setCurrentScenario(generatedScenario);
-
-				// // Prefetch the next two scenarios
-
-				// );
 			} catch (error) {
 				console.error("Failed to load scenario:", error);
 			} finally {
 				setIsLoading(false);
 			}
 		};
-
 		initializeScenario();
-	}, []); // Empty dependency array means this runs once on mount
+	}, []);
 
 	useEffect(() => {
 		console.log(choiseScenarios);
