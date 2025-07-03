@@ -12,6 +12,7 @@ import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
 import { loadGameScenarios, type ClientScenario } from "@/lib/supabase/cardUtils";
 import { createClient } from '@supabase/supabase-js';
+import { getJobs } from "@/lib/supabase/jobUtils";
 
 
 const DRAG_THRESHOLD = 200;
@@ -42,16 +43,6 @@ const supabase = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_URL!,
 	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-export async function getJobs() {
-	const { data, error } = await supabase
-		.from('jobs')
-		.select('jobid, company_name, job_title, description_text, location, salary_formatted')
-		.limit(20);
-
-	if (error) throw error;
-	return data;
-}
 
 export default function GameInterface() {
 	const [dayCount, setDayCount] = useState(0);
