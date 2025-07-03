@@ -7,7 +7,6 @@ export type Job = {
   company: string
   location: string
   description_text: string
-  created_at?: string
 }
 
 // Type for the game's scenario format
@@ -23,7 +22,6 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
     const { data, error } = await (supabase as any)
       .from('jobs')
       .select('*')
-      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error loading jobs from database:', error)
