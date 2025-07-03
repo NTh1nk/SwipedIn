@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "title": "Frontend Developer",
+    "company": "Tech Solutions",
+    "location": "Remote",
+    "description": "Work on modern web apps using React and TypeScript."
+  },
+  {
+    "id": 2,
+    "title": "Backend Engineer",
+    "company": "Cloudify",
+    "location": "Berlin, Germany",
+    "description": "Build scalable APIs and microservices with Node.js."
+  },
+  {
+    "id": 3,
+    "title": "UI/UX Designer",
+    "company": "DesignHub",
+    "location": "New York, NY",
+    "description": "Create beautiful and user-friendly interfaces for web and mobile."
+  }
+] 
