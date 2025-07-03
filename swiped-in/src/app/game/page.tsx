@@ -134,6 +134,18 @@ export default function GameInterface() {
 
 	// const opacity = useTransform(x, [-200, 0, 200], [0, 1, 0]);
 
+	// Add a useEffect to update currentScenario when currentScenarioIndex changes
+	useEffect(() => {
+		if (scenariosData.length > 0 && currentScenarioIndex < scenariosData.length) {
+			setCurrentScenario(scenariosData[currentScenarioIndex]);
+			// Update choice scenarios for the current job
+			choiseScenarios.current = {
+				optionA: scenariosData[currentScenarioIndex],
+				optionB: scenariosData[currentScenarioIndex],
+			};
+		}
+	}, [currentScenarioIndex, scenariosData]);
+
 	const handleDragEnd = async (
 		event: MouseEvent | TouchEvent | PointerEvent,
 		info: {
@@ -159,8 +171,6 @@ export default function GameInterface() {
 			const angle = Math.atan2(predictedY, predictedX);
 			const throwX = Math.cos(angle) * window.innerWidth * 1.5;
 			const throwY = Math.sin(angle) * window.innerHeight * 1.5;
-
-			setScenarios([...scenarios, scenarios.length]);
 
 			await mainControls.start({
 				x: throwX,
