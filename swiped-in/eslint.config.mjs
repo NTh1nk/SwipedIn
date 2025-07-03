@@ -11,15 +11,16 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  rules: {
-    ...reactHooks.configs.recommended.rules,
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-    "no-unused-vars": 0,
-    "@typescript-eslint/no-unused-vars": 0,
-    "@typescript-eslint/no-explicit-any":0,
+  {
+    rules: {
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      "no-unused-vars": 0,
+      "@typescript-eslint/no-unused-vars": 0,
+      "@typescript-eslint/no-explicit-any": 0,
+    },
   },
 ];
 
