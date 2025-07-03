@@ -38,8 +38,8 @@ export function CardStack({
                                 <motion.div
                                     key={`${i}`}
                                     animate={{
-                                        scale: 0.95 ** (i - (currentScenarioIndex + (isAnimating && 1))),
-                                        y: (i - (currentScenarioIndex + (isAnimating && 1))) * 30,
+                                        scale: 0.95 ** (i - (currentScenarioIndex + (isAnimating ? 1 : 0))),
+                                        y: (i - (currentScenarioIndex + (isAnimating ? 1 : 0))) * 30,
                                         opacity: 1,
                                     }}
                                     initial={{
@@ -73,10 +73,10 @@ export function CardStack({
                                         <motion.div
                                             className="p-6 h-full flex flex-col bg-white rounded-2xl"
                                             animate={{
-                                                opacity: 1 - (i - (currentScenarioIndex + (isAnimating && 1))) * 0.2,
+                                                opacity: 1 - (i - (currentScenarioIndex + (isAnimating ? 1 : 0))) * 0.2,
                                             }}
                                             initial={{
-                                                opacity: 1 - (i - (currentScenarioIndex + (isAnimating && 1))) * 0.4,
+                                                opacity: 1 - (i - (currentScenarioIndex + (isAnimating ? 1 : 0))) * 0.4,
                                             }}
                                         >
                                             <div className="flex-1 flex flex-col text-center items-center justify-around">

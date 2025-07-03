@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Page() {
 	const [data, setData] = useState<{ situation: string; optionA: string; optionB: string } | null>(null);
 
-	setData({
-		situation: "A severe drought has crippled your nation's agriculture, causing widespread food shortages. International aid is available but requires the removal of key environmental regulations.",
-		optionA: "Option A",
-		optionB: "Option B",
-	});
+	useEffect(() => {
+		setData({
+			situation: "A severe drought has crippled your nation's agriculture, causing widespread food shortages. International aid is available but requires the removal of key environmental regulations.",
+			optionA: "Option A",
+			optionB: "Option B",
+		});
+	}, []);
 
 	return (
 		<>
