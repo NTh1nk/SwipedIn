@@ -79,8 +79,8 @@ export default function GameInterface() {
 				// Transform jobs into scenarios
 				const jobScenarios = jobs.map((job: any) => ({
 					situation: `${job.title} at ${job.company} (${job.location})`,
-					optionA: { text: "Apply", id: job.id },
-					optionB: { text: "Decline", id: job.id },
+					optionA: { text: "Decline", id: job.id },
+					optionB: { text: "Accept", id: job.id },
 				}));
 				setScenariosData(jobScenarios);
 				// Create array of indices for CardStack
