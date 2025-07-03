@@ -1,3 +1,4 @@
+/*
 import { createClient, SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { Database } from "../_shared/database.types.ts";
 import { CoreMessage, GenerateObjectResult } from "npm:ai";
@@ -201,3 +202,4 @@ async function getScenario(
   }
   return [clientScenario(genaration.situation, optionRows), previousScenarios];
 }
+*/
