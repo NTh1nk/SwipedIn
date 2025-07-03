@@ -10,7 +10,6 @@ import {
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
-import { supabase } from "@/lib/supabase/client";
 import { loadGameScenarios, type ClientScenario } from "@/lib/supabase/cardUtils";
 import { createClient } from '@supabase/supabase-js';
 
@@ -39,13 +38,13 @@ const testData: ClientScenario[] = [
 
 const STARTING_SCENARIO_ID = 5;
 
-const supabaseClient = createClient(
+const supabase = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_URL!,
 	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function getJobs() {
-	const { data, error } = await supabaseClient
+	const { data, error } = await supabase
 		.from('jobs')
 		.select('jobid, company_name, job_title, description_text, location, salary_formatted')
 		.limit(20);
