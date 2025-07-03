@@ -239,11 +239,11 @@ export default function GameInterface() {
 	}
 
 	return (
-		<div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
+		<div className="min-h-screen bg-blue-100 text-black flex flex-col overflow-hidden">
 			<div className="mt-8 text-center font-mono">
 				<p className="text-2xl">SwipedIn</p>
 			</div>
-			<div className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full">
+			<div className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full text-black">
 				<CardStack
 					scenarios={scenarios}
 					currentScenarioIndex={currentScenarioIndex}

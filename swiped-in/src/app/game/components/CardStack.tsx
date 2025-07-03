@@ -57,7 +57,7 @@ export function CardStack({
                                     transition={{ duration: 0.5, ease: "easeInOut" }}
                                 >
                                     <motion.div
-                                        className="absolute inset-0 bg-black rounded-2xl shadow-xl"
+                                        className="absolute inset-0 bg-white rounded-2xl shadow-xl"
                                         id={i + ""}
                                         style={i === currentScenarioIndex ? { rotate: cardControls.rotate, x: cardControls.x, y: cardControls.y } : {}}
                                         drag={i === currentScenarioIndex && !isAnimating}
@@ -71,7 +71,7 @@ export function CardStack({
                                         onDragEnd={i === currentScenarioIndex ? cardControls.handleDragEnd : undefined}
                                     >
                                         <motion.div
-                                            className="p-6 h-full flex flex-col bg-neutral-800 rounded-2xl"
+                                            className="p-6 h-full flex flex-col bg-white rounded-2xl"
                                             animate={{
                                                 opacity: 1 - (i - (currentScenarioIndex + (isAnimating && 1))) * 0.2,
                                             }}
@@ -83,7 +83,7 @@ export function CardStack({
                                                 <p className="font-mono text-sm md:text-base">
                                                     {i === currentScenarioIndex ? currentScenario.situation : nextCardContent}
                                                 </p>
-                                                <div className="w-32 h-32 bg-neutral-700 rounded-full" />
+                                                <div className="w-32 h-32 bg-blue-200 rounded-full" />
                                             </div>
                                         </motion.div>
                                     </motion.div>
