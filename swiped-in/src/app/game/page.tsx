@@ -53,7 +53,8 @@ export default function GameInterface() {
 	// const [scenarios] = useState<Database["public"]["Tables"]["games"]["Row"][]>(
 	// 	[]
 	// );
-	const [scenarios, setScenario] = useState([0, 1, 2, 3]);
+	const [scenarios, setScenarios] = useState<number[]>([]);
+	const [scenariosData, setScenariosData] = useState<ClientScenario[]>([]);
 
 	//const supabase = createClient();
 
@@ -72,22 +73,33 @@ export default function GameInterface() {
 	});
 
 	useEffect(() => {
-		const initializeScenario = async () => {
-			try {
-				// Use the first scenario from testData as the initial scenario
-				const generatedScenario: ClientScenario = testData[0];
-				choiseScenarios.current = {
-					optionA: generatedScenario,
-					optionB: generatedScenario,
-				};
-				setCurrentScenario(generatedScenario);
-			} catch (error) {
-				console.error("Failed to load scenario:", error);
-			} finally {
+		fetch("/jobs.json")
+			.then((res) => res.json())
+			.then((jobs) => {
+				// Transform jobs into scenarios
+				const jobScenarios = jobs.map((job: any) => ({
+					situation: `${job.title} at ${job.company} (${job.location})`,
+					optionA: { text: "Apply", id: job.id },
+					optionB: { text: "Decline", id: job.id },
+				}));
+				setScenariosData(jobScenarios);
+				// Create array of indices for CardStack
+				setScenarios(jobScenarios.map((_: any, index: number) => index));
+				// Set the first scenario as current
+				if (jobScenarios.length > 0) {
+					setCurrentScenario(jobScenarios[0]);
+					// Set up choice scenarios
+					choiseScenarios.current = {
+						optionA: jobScenarios[0],
+						optionB: jobScenarios[0],
+					};
+				}
 				setIsLoading(false);
-			}
-		};
-		initializeScenario();
+			})
+			.catch((error) => {
+				console.error("Failed to load jobs:", error);
+				setIsLoading(false);
+			});
 	}, []);
 
 	useEffect(() => {
@@ -148,7 +160,7 @@ export default function GameInterface() {
 			const throwX = Math.cos(angle) * window.innerWidth * 1.5;
 			const throwY = Math.sin(angle) * window.innerHeight * 1.5;
 
-			setScenario([...scenarios, scenarios.length]);
+			setScenarios([...scenarios, scenarios.length]);
 
 			await mainControls.start({
 				x: throwX,
@@ -162,52 +174,12 @@ export default function GameInterface() {
 				? choiseScenarios.current.optionA
 				: choiseScenarios.current.optionB;
 
-
-			setCurrentScenario(selectedScenario);
+			if (selectedScenario) {
+				setCurrentScenario(selectedScenario);
+			}
 			setDayCount((prev) => prev + 1); //day count increment
 
-			// previueMsgs.current = [
-			// 	...previueMsgs.current,
-			// 	{
-			// 		role: "user",
-			// 		content: isSwipingLeft
-			// 			? currentScenario.optionA
-			// 			: currentScenario.optionB,
-			// 	},
-			// 	{
-			// 		role: "assistant",
-			// 		content: selectedScenario.situation,
-			// 	},
-			// ];
-			// setCurrentScenario(selectedScenario);
-
-			// console.log("current", selectedScenario);
-
-			// setDayCount((prev) => prev + 1);
-
-			// ["optionA", "optionB"].map((key) => {
-			// 	// fetchNextScenario([
-			// 	//   ...previueMsgs.current,
-			// 	//   {
-			// 	//     role: "user",
-			// 	//     content: selectedScenario[key],
-			// 	//   },
-			// 	// ]).then((s) => {
-			// 	//   choiseScenarios.current = {
-			// 	//     ...choiseScenarios.current,
-			// 	//     [key]: normalizeScenario(s),
-			// 	//   };
-			// 	//   console.log(key, ":", s);
-			// 	// });
-			// });
-
 			// Move to next scenario
-			// setCurrentScenarioIndex(
-			// 	(prevIndex) => (prevIndex + 1) % scenarios.length
-			// );
-
-			// mainControls.set({ x: 0, y: 0, opacity: 1 });
-
 			setCurrentScenarioIndex((prevIndex) => prevIndex + 1);
 			x.set(0);
 			y.set(0);
