@@ -20,7 +20,7 @@ type ClientScenario = {
 	optionA: { text: string; id: number };
 	optionB: { text: string; id: number };
 };
-
+/*
 const clientScenario = (
 	situation: string,
 	optionRows: { leading_choice: string | null; id: number }[]
@@ -29,6 +29,11 @@ const clientScenario = (
 	optionA: { text: optionRows[0].leading_choice, id: optionRows[0].id },
 	optionB: { text: optionRows[1].leading_choice, id: optionRows[1].id },
 });
+*/
+	const testData = [
+
+	]
+
 
 const STARTING_SCENARIO_ID = 5;
 
@@ -47,7 +52,7 @@ export default function GameInterface() {
 	// );
 	const [scenarios, setScenario] = useState([0, 1, 2, 3]);
 
-	const supabase = createClient();
+	//const supabase = createClient();
 
 	// supabase.auth.signInAnonymously();
 
@@ -66,8 +71,7 @@ export default function GameInterface() {
 	useEffect(() => {
 		const initializeScenario = async () => {
 			try {
-				const { data } = await supabase.functions.invoke("generateScenario", {
-					body: { scenarioId: STARTING_SCENARIO_ID },
+				const { data } = testData;
 				});
 
 				const generatedScenario: ClientScenario = data.data;
