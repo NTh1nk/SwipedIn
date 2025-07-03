@@ -11,6 +11,7 @@ import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
 
+
 const DRAG_THRESHOLD = 200;
 const THROW_VELOCITY = 750;
 
@@ -31,9 +32,9 @@ const clientScenario = (
 */
 const testData: ClientScenario[] = [
 	{
-		situation: "You are faced with a tough decision at work.",
-		optionA: { text: "Take the risk", id: 1 },
-		optionB: { text: "Play it safe", id: 2 },
+		situation: "Job 1",
+		optionA: { text: "Decline", id: 1 },
+		optionB: { text: "Apply", id: 2 },
 	},
 ];
 
@@ -239,8 +240,9 @@ export default function GameInterface() {
 
 	return (
 		<div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
-			<StatusBar stats={stats} />
-
+			<div className="mt-8 text-center font-mono">
+				<p className="text-2xl">SwipedIn</p>
+			</div>
 			<div className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full">
 				<CardStack
 					scenarios={scenarios}
@@ -264,8 +266,8 @@ export default function GameInterface() {
 				/>
 
 				<div className="mt-8 text-center font-mono">
-					<p className="text-2xl">2075</p>
-					<p className="text-neutral-400">{dayCount} days in power</p>
+					
+					<p className="text-neutral-400">{dayCount} jobs looked through</p>
 				</div>
 			</div>
 		</div>
