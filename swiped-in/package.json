@@ -35,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9.30.1",
     "eslint-config-next": "15.3.4",
+    "eslint-plugin-react-refresh": "^0.4.20",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
