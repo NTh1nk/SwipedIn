@@ -10,6 +10,7 @@ import {
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
+import { supabase } from "@/lib/supabase/client";
 
 
 const DRAG_THRESHOLD = 200;
@@ -55,9 +56,8 @@ export default function GameInterface() {
 	// );
 	const [scenarios, setScenarios] = useState<number[]>([]);
 	const [scenariosData, setScenariosData] = useState<ClientScenario[]>([]);
-
-	//const supabase = createClient();
-
+	
+	// Initialize Supabase client
 	// supabase.auth.signInAnonymously();
 
 	const [currentScenario, setCurrentScenario] = useState<ClientScenario | null>(
