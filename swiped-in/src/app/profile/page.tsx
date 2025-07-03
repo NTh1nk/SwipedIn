@@ -10,7 +10,7 @@ export default function ProfilePage() {
     if (e.target.files && e.target.files[0]) {
       setResume(e.target.files[0]);
     }
-  };
+  };  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white text-black p-4">
