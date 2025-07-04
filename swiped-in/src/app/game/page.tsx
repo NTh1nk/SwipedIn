@@ -10,7 +10,7 @@ import {
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
-import { loadGameScenarios, type ClientScenario, ensureDefaultOptions } from "@/lib/supabase/cardUtils";
+import { loadGameScenarios, type ClientScenario, ensureDefaultOptions, loadMoreScenarios } from "@/lib/supabase/cardUtils";
 import { createClient } from '@supabase/supabase-js';
 import { getJobs } from "@/lib/supabase/jobUtils";
 
@@ -59,10 +59,8 @@ export default function GameInterface() {
 	// );
 	const [scenarios, setScenarios] = useState<number[]>([]);
 	const [scenariosData, setScenariosData] = useState<ClientScenario[]>([]);
+	const [isLoadingMore, setIsLoadingMore] = useState(false);
 	
-	// Initialize Supabase client
-	// supabase.auth.signInAnonymously();
-
 	const [currentScenario, setCurrentScenario] = useState<ClientScenario | null>(
 		null
 	);
@@ -74,6 +72,25 @@ export default function GameInterface() {
 		optionA: null,
 		optionB: null,
 	});
+
+	// Load more scenarios when needed
+	const loadMoreScenariosIfNeeded = async () => {
+		// If we're within 2 cards of the end, load more
+		if (currentScenarioIndex >= scenariosData.length - 2 && !isLoadingMore) {
+			setIsLoadingMore(true);
+			try {
+				const newScenarios = await loadMoreScenarios(scenariosData.length);
+				if (newScenarios.length > 0) {
+					setScenariosData(prev => [...prev, ...newScenarios]);
+					setScenarios(prev => [...prev, ...newScenarios.map((_: any, index: number) => prev.length + index)]);
+				}
+			} catch (error) {
+				console.error("Failed to load more scenarios:", error);
+			} finally {
+				setIsLoadingMore(false);
+			}
+		}
+	};
 
 	useEffect(() => {
 		loadGameScenarios()
@@ -123,6 +140,11 @@ export default function GameInterface() {
 				setIsLoading(false);
 			});
 	}, []);
+
+	// Check if we need to load more scenarios when currentScenarioIndex changes
+	useEffect(() => {
+		loadMoreScenariosIfNeeded();
+	}, [currentScenarioIndex, scenariosData.length]);
 
 	useEffect(() => {
 		console.log(choiseScenarios);

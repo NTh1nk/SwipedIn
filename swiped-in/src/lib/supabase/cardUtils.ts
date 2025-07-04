@@ -16,14 +16,14 @@ export type ClientScenario = {
   optionB: { text: string; id: number }
 }
 
-// Load all jobs from the database
-export async function loadJobsFromDatabase(): Promise<Job[]> {
+// Load jobs from the database with pagination
+export async function loadJobsFromDatabase(offset: number = 0, limit: number = 10): Promise<Job[]> {
   try {
-    console.log("Loading jobs from database...");
+    console.log(`Loading jobs from database (offset: ${offset}, limit: ${limit})...`);
     const { data, error } = await (supabase as any)
       .from('jobs')
       .select('job_title, company_name, location, salary_formatted')
-      .limit(10)
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error loading jobs from database:', error)
@@ -80,9 +80,9 @@ export function ensureDefaultOptions(scenario: ClientScenario): ClientScenario {
 }
 
 // Load and transform jobs for the game
-export async function loadGameScenarios(): Promise<ClientScenario[]> {
+export async function loadGameScenarios(offset: number = 0): Promise<ClientScenario[]> {
   try {
-    const jobs = await loadJobsFromDatabase()
+    const jobs = await loadJobsFromDatabase(offset, 10)
     console.log("Jobs loaded:", jobs);
     const scenarios = transformJobsToScenarios(jobs)
     // Ensure all scenarios have valid default options
@@ -91,6 +91,11 @@ export async function loadGameScenarios(): Promise<ClientScenario[]> {
     console.error('Failed to load game scenarios:', error)
     return []
   }
+}
+
+// Load more scenarios (for infinite scrolling)
+export async function loadMoreScenarios(currentCount: number): Promise<ClientScenario[]> {
+  return loadGameScenarios(currentCount)
 }
 
 // Create a new job in the database
