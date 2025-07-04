@@ -2,11 +2,11 @@ import { supabase } from './client'
 
 // Type for jobs from the database
 export type Job = {
-  jobid: number
-  title: string
-  company: string
+  jobid?: number
+  job_title: string
+  company_name: string
   location: string
-  description_text: string
+  salary_formatted?: string
 }
 
 // Type for the game's scenario format
@@ -22,7 +22,7 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
     console.log("Loading jobs from database...");
     const { data, error } = await (supabase as any)
       .from('jobs')
-      .select('*')
+      .select('job_title, company_name, location, salary_formatted')
 
     if (error) {
       console.error('Error loading jobs from database:', error)
@@ -40,18 +40,18 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
 // Transform database jobs into game scenarios
 export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
   console.log("Transforming jobs to scenarios:", jobs);
-  const scenarios = jobs.map((job) => {
+  const scenarios = jobs.map((job, index) => {
     // Create the situation text using job details
-    const situation = `${job.title} at ${job.company} (${job.location})`
+    const situation = `${job.job_title} at ${job.company_name} (${job.location})`
     
-    // Use the description to create more context
-    const fullSituation = job.description_text 
-      ? `${situation} - ${job.description_text}`
+    // Use the salary to create more context
+    const fullSituation = job.salary_formatted 
+      ? `${situation} - ${job.salary_formatted}`
       : situation
 
     // Default choices for job scenarios - always ensure these are set
-    const optionA = { text: 'Decline', id: job.jobid }
-    const optionB = { text: 'Accept', id: job.jobid }
+    const optionA = { text: 'Decline', id: job.jobid || index }
+    const optionB = { text: 'Accept', id: job.jobid || index }
 
     return {
       situation: fullSituation,
@@ -94,10 +94,10 @@ export async function loadGameScenarios(): Promise<ClientScenario[]> {
 
 // Create a new job in the database
 export async function createJob(jobData: {
-  title: string
-  company: string
+  job_title: string
+  company_name: string
   location: string
-  description_text: string
+  salary_formatted?: string
 }): Promise<Job | null> {
   try {
     const { data, error } = await (supabase as any)
