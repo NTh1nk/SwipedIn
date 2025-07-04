@@ -7,12 +7,14 @@ export type Job = {
   company_name: string
   location: string
   salary_formatted?: string
+  company_rating?: number
 }
 
 // Type for the game's scenario format
 export type ClientScenario = {
   situation: string
   salary?: string
+  company_rating?: number
   optionA: { text: string; id: number }
   optionB: { text: string; id: number }
 }
@@ -23,7 +25,7 @@ export async function loadJobsFromDatabase(offset: number = 0, limit: number = 1
     console.log(`Loading jobs from database (offset: ${offset}, limit: ${limit})...`);
     const { data, error } = await (supabase as any)
       .from('jobs')
-      .select('job_title, company_name, location, salary_formatted')
+      .select('job_title, company_name, location, salary_formatted, company_rating')
       .range(offset, offset + limit - 1)
 
     if (error) {
@@ -53,6 +55,7 @@ export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
     return {
       situation,
       salary: job.salary_formatted || undefined,
+      company_rating: job.company_rating,
       optionA,
       optionB,
     }
