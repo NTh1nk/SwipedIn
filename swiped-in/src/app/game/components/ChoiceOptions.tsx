@@ -15,7 +15,7 @@ export function ChoiceOptions({ currentScenario, leftOpacity, rightOpacity }: Ch
     const optionBText = currentScenario.optionB?.text || "Apply";
 
     return (
-        <div className="mt-8 flex flex-row gap-6 font-mono px-0 w-full justify-between md:text-xl z-10">
+        <div className="mt-8 flex flex-row gap-6 font-mono px-0 w-full justify-between md:text-xl z-100">
             <motion.h1 style={{ opacity: leftOpacity }}>
                 {optionAText}
             </motion.h1>
