@@ -10,9 +10,9 @@ type ChoiceOptionsProps = {
 };
 
 export function ChoiceOptions({ currentScenario, leftOpacity, rightOpacity }: ChoiceOptionsProps) {
-    // Default to "Decline" and "Accept" if options are empty, null, or undefined
+    // Default to "Decline" and "Apply" if options are empty, null, or undefined
     const optionAText = currentScenario.optionA?.text || "Decline";
-    const optionBText = currentScenario.optionB?.text || "Accept";
+    const optionBText = currentScenario.optionB?.text || "Apply";
 
     return (
         <div className="mt-8 flex flex-row gap-6 font-mono px-0 w-full justify-between md:text-xl z-10">

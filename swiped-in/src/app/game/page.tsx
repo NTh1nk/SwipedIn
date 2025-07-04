@@ -33,7 +33,7 @@ const testData: ClientScenario[] = [
 	{
 		situation: "Job 1",
 		optionA: { text: "Decline", id: 1 },
-		optionB: { text: "Accept", id: 2 },
+		optionB: { text: "Apply", id: 2 },
 	},
 ];
 
@@ -114,7 +114,7 @@ export default function GameInterface() {
 					const fallbackScenario = ensureDefaultOptions({
 						situation: "No jobs available at the moment. Check back later!",
 						optionA: { text: "Decline", id: 0 },
-						optionB: { text: "Accept", id: 0 }
+						optionB: { text: "Apply", id: 0 }
 					});
 					setCurrentScenario(fallbackScenario);
 					choiseScenarios.current = {
@@ -130,7 +130,7 @@ export default function GameInterface() {
 				const fallbackScenario = ensureDefaultOptions({
 					situation: "Unable to load jobs. Please try again later.",
 					optionA: { text: "Decline", id: 0 },
-					optionB: { text: "Accept", id: 0 }
+					optionB: { text: "Apply", id: 0 }
 				});
 				setCurrentScenario(fallbackScenario);
 				choiseScenarios.current = {
