@@ -52,7 +52,7 @@ export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
 
     // Default choices for job scenarios - always ensure these are set
     const optionA = { text: 'Decline', id: job.jobid || index }
-    const optionB = { text: 'Accept', id: job.jobid || index }
+    const optionB = { text: 'Apply', id: job.jobid || index }
 
     return {
       situation: fullSituation,
@@ -73,7 +73,7 @@ export function ensureDefaultOptions(scenario: ClientScenario): ClientScenario {
       id: scenario.optionA?.id || 0
     },
     optionB: {
-      text: scenario.optionB?.text || 'Accept', 
+      text: scenario.optionB?.text || 'Apply', 
       id: scenario.optionB?.id || 0
     }
   }
@@ -172,7 +172,7 @@ export function testDefaultOptions() {
     {
       situation: "Normal job",
       optionA: { text: "Custom Decline", id: 1 },
-      optionB: { text: "Custom Accept", id: 2 }
+      optionB: { text: "Custom Apply", id: 2 }
     },
     {
       situation: "Job with empty options",
