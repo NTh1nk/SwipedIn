@@ -3,13 +3,33 @@
 import { useRef, useState } from "react";
 import { extractTextFromFile, cleanResumeText } from "@/lib/resumeUtils";
 
+const JOB_CATEGORIES = [
+  "Software",
+  "Engineering",
+  "Product",
+  "Design",
+  "Marketing",
+  "Sales",
+  "Operations",
+  "Finance",
+  "HR",
+  "Customer Support",
+  "Other"
+];
+
 export default function ProfilePage() {
   const [resume, setResume] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const options = Array.from(e.target.selectedOptions).map(opt => opt.value);
+    setSelectedCategories(options);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -66,11 +86,31 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Resume Analyzer</h1>
         
+        {/* Category Selection */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Select Job Categories</h2>
+          <select
+            multiple
+            value={selectedCategories}
+            onChange={handleCategoryChange}
+            className="w-full border text-gray-900 border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            {JOB_CATEGORIES.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          <div className="mt-2 text-sm text-gray-900">
+            {selectedCategories.length > 0
+              ? `Selected: ${selectedCategories.join(", ")}`
+              : "No categories selected"}
+          </div>
+        </div>
+
         {/* File Upload Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Upload Resume</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Upload Resume</h2>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Upload your resume (PDF, DOCX, or TXT):
             </label>
             <input
@@ -90,9 +130,9 @@ export default function ProfilePage() {
 
         {/* Manual Text Input Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Resume Text</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Resume Text</h2>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Paste your resume text here:
             </label>
             <textarea
@@ -100,7 +140,7 @@ export default function ProfilePage() {
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Paste your resume content here..."
               rows={12}
-              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border text-gray-900 border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
