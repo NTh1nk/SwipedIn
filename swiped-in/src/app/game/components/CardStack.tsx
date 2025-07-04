@@ -81,12 +81,12 @@ export function CardStack({
                                         >
                                             <div className="flex-1 flex flex-col text-center items-center justify-around">
                                                 <div className="flex-1 flex flex-col justify-center items-center">
-                                                    <p className="font-mono text-sm md:text-base mb-2">
+                                                    <p className="font-mono text-sm md:text-base mb-10">
                                                         {i === currentScenarioIndex ? currentScenario.situation : nextCardContent}
                                                     </p>
                                                     {i === currentScenarioIndex && currentScenario.company_rating !== undefined && (
-                                                        <div className="flex items-center justify-center mb-2">
-                                                            <span className="bg-yellow-100 border border-yellow-300 rounded-full px-3 py-1 text-yellow-800 font-semibold text-xs flex items-center gap-1">
+                                                        <div className="flex items-center justify-center mb-5">
+                                                            <span className="bg-yellow-100 border  border-yellow-300 rounded-full px-3 py-1 text-yellow-800 font-semibold text-xs flex items-center gap-1">
                                                                 ⭐
                                                                 <span>{currentScenario.company_rating.toFixed(1)}</span>
                                                             </span>
