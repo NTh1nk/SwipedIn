@@ -31,7 +31,7 @@ const clientScenario = (
 */
 const testData: ClientScenario[] = [
 	{
-		situation: "Job 1",
+		situation: "Software Developer at Tech Corp (Remote)",
 		optionA: { text: "Decline", id: 1 },
 		optionB: { text: "Apply", id: 2 },
 	},

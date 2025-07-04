@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "framer-motion": "^12.23.0"
+  },
+  "devDependencies": {
+    "eslint-plugin-react-refresh": "^0.4.20"
   }
 }
