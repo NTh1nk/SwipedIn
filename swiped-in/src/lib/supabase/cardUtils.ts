@@ -13,6 +13,9 @@ export type Job = {
 // Type for the game's scenario format
 export type ClientScenario = {
   situation: string
+  job_title: string
+  company_name: string
+  location: string
   salary?: string
   company_rating?: number
   optionA: { text: string; id: number }
@@ -54,6 +57,9 @@ export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
 
     return {
       situation,
+      job_title: job.job_title,
+      company_name: job.company_name,
+      location: job.location,
       salary: job.salary_formatted || undefined,
       company_rating: job.company_rating,
       optionA,
@@ -168,22 +174,34 @@ export async function deleteJob(jobid: number): Promise<boolean> {
 
 // Test function to demonstrate default options functionality
 export function testDefaultOptions() {
-  const testScenarios = [
+  const testScenarios: ClientScenario[] = [
     {
       situation: "Normal job",
+      job_title: "Software Engineer",
+      company_name: "TechCorp",
+      location: "Remote",
       salary: "$80,000 - $100,000",
+      company_rating: 4.5,
       optionA: { text: "Custom Decline", id: 1 },
       optionB: { text: "Custom Apply", id: 2 }
     },
     {
       situation: "Job with empty options",
+      job_title: "Product Manager",
+      company_name: "BizInc",
+      location: "New York, NY",
       salary: "$60,000 - $80,000",
+      company_rating: 4.2,
       optionA: { text: "", id: 3 },
       optionB: { text: "", id: 4 }
     },
     {
       situation: "Job with null options",
+      job_title: "Designer",
+      company_name: "CreativeStudio",
+      location: "San Francisco, CA",
       salary: undefined,
+      company_rating: 3.9,
       optionA: { text: null as any, id: 5 },
       optionB: { text: null as any, id: 6 }
     }

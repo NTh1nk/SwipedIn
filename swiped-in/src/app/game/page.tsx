@@ -227,6 +227,7 @@ export default function GameInterface() {
 			});
 
 			const isSwipingLeft = predictedX < 0;
+			const isSwipingRight = !isSwipingLeft;
 			const selectedScenario = isSwipingLeft
 				? choiseScenarios.current.optionA
 				: choiseScenarios.current.optionB;
@@ -243,6 +244,14 @@ export default function GameInterface() {
 
 			// Reset card position for next scenario
 			setIsAnimating(false);
+
+			if (isSwipingRight && selectedScenario) {
+				const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs") || "[]");
+				if (!appliedJobs.some((j: any) => j.optionA.id === selectedScenario.optionA.id && j.situation === selectedScenario.situation)) {
+					appliedJobs.push(selectedScenario);
+					localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
+				}
+			}
 		} else {
 			// Snap back to center
 			mainControls.start({
