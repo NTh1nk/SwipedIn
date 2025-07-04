@@ -10,10 +10,21 @@ import {
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
-import { loadGameScenarios, type ClientScenario, ensureDefaultOptions, loadMoreScenarios } from "@/lib/supabase/cardUtils";
+import { loadGameScenarios, ensureDefaultOptions, loadMoreScenarios } from "@/lib/supabase/cardUtils";
 import { createClient } from '@supabase/supabase-js';
 import { getJobs } from "@/lib/supabase/jobUtils";
 
+// Define the type inline to avoid conflicts
+type ClientScenario = {
+	situation: string;
+	job_title: string;
+	company_name: string;
+	location: string;
+	salary?: string;
+	company_rating?: number;
+	optionA: { text: string; id: number };
+	optionB: { text: string; id: number };
+};
 
 const DRAG_THRESHOLD = 200;
 const THROW_VELOCITY = 750;
@@ -29,13 +40,6 @@ const clientScenario = (
 	optionB: { text: optionRows[1].leading_choice, id: optionRows[1].id },
 });
 */
-const testData: ClientScenario[] = [
-	{
-		situation: "Software Developer at Tech Corp (Remote)",
-		optionA: { text: "Decline", id: 1 },
-		optionB: { text: "Apply", id: 2 },
-	},
-];
 
 const STARTING_SCENARIO_ID = 5;
 
@@ -113,6 +117,9 @@ export default function GameInterface() {
 					console.log("No scenarios found, creating fallback scenario");
 					const fallbackScenario = ensureDefaultOptions({
 						situation: "No jobs available at the moment. Check back later!",
+						job_title: "No Jobs",
+						company_name: "System",
+						location: "N/A",
 						salary: undefined,
 						optionA: { text: "Decline", id: 0 },
 						optionB: { text: "Apply", id: 0 }
@@ -130,6 +137,9 @@ export default function GameInterface() {
 				// Fallback: create a default scenario on error
 				const fallbackScenario = ensureDefaultOptions({
 					situation: "Unable to load jobs. Please try again later.",
+					job_title: "Error",
+					company_name: "System",
+					location: "N/A",
 					salary: undefined,
 					optionA: { text: "Decline", id: 0 },
 					optionB: { text: "Apply", id: 0 }
