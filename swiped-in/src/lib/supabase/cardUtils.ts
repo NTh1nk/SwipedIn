@@ -23,6 +23,7 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
     const { data, error } = await (supabase as any)
       .from('jobs')
       .select('job_title, company_name, location, salary_formatted')
+      .limit(10)
 
     if (error) {
       console.error('Error loading jobs from database:', error)
