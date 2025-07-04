@@ -1,32 +1,131 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { extractTextFromFile, cleanResumeText } from "@/lib/resumeUtils";
 
 export default function ProfilePage() {
   const [resume, setResume] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
+  const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setResume(e.target.files[0]);
+      const file = e.target.files[0];
+      setResume(file);
+      setResumeText("");
+      setSummary("");
+      setError("");
+      
+      // Extract text from the file
+      extractTextFromFile(file)
+        .then(text => {
+          const cleanedText = cleanResumeText(text);
+          setResumeText(cleanedText);
+        })
+        .catch(err => {
+          setError(err.message);
+        });
     }
-  };  
+  };
+
+  const handleSummarize = async () => {
+    if (!resumeText.trim()) {
+      setError("Please provide resume text to summarize.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSummary("");
+    
+    try {
+      const res = await fetch("/api/summarize-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume: resumeText }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to summarize resume");
+      }
+      
+      const data = await res.json();
+      setSummary(data.summary);
+    } catch (err: any) {
+      setError(err.message || "Failed to generate summary");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white text-black p-4">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
-      <div className="w-full max-w-md bg-gray-100 rounded-xl shadow p-6 flex flex-col items-center">
-        <label className="block mb-2 font-medium">Upload your resume (PDF or DOCX):</label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx"
-          onChange={handleFileChange}
-          className="mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
-        {resume && (
-          <div className="mt-2 text-green-700">
-            <span className="font-semibold">Selected file:</span> {resume.name}
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Resume Analyzer</h1>
+        
+        {/* File Upload Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Upload Resume</h2>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload your resume (PDF, DOCX, or TXT):
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.txt"
+              onChange={handleFileChange}
+              className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+            />
+          </div>
+          {resume && (
+            <div className="text-green-600 font-medium">
+              ✓ Selected: {resume.name}
+            </div>
+          )}
+        </div>
+
+        {/* Manual Text Input Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Resume Text</h2>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Paste your resume text here:
+            </label>
+            <textarea
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              placeholder="Paste your resume content here..."
+              rows={12}
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          {error && (
+            <div className="text-red-600 text-sm mb-4">{error}</div>
+          )}
+          
+          <button
+            onClick={handleSummarize}
+            disabled={loading || !resumeText.trim()}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Generating Summary..." : "Generate Summary"}
+          </button>
+        </div>
+
+        {/* Summary Section */}
+        {summary && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">AI-Generated Summary</h2>
+            <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+              <p className="whitespace-pre-line text-gray-800 leading-relaxed">
+                {summary}
+              </p>
+            </div>
           </div>
         )}
       </div>

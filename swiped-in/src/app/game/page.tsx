@@ -113,6 +113,7 @@ export default function GameInterface() {
 					console.log("No scenarios found, creating fallback scenario");
 					const fallbackScenario = ensureDefaultOptions({
 						situation: "No jobs available at the moment. Check back later!",
+						salary: undefined,
 						optionA: { text: "Decline", id: 0 },
 						optionB: { text: "Apply", id: 0 }
 					});
@@ -129,6 +130,7 @@ export default function GameInterface() {
 				// Fallback: create a default scenario on error
 				const fallbackScenario = ensureDefaultOptions({
 					situation: "Unable to load jobs. Please try again later.",
+					salary: undefined,
 					optionA: { text: "Decline", id: 0 },
 					optionB: { text: "Apply", id: 0 }
 				});

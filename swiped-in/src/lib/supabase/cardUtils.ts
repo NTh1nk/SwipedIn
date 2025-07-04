@@ -12,6 +12,7 @@ export type Job = {
 // Type for the game's scenario format
 export type ClientScenario = {
   situation: string
+  salary?: string
   optionA: { text: string; id: number }
   optionB: { text: string; id: number }
 }
@@ -42,20 +43,16 @@ export async function loadJobsFromDatabase(offset: number = 0, limit: number = 1
 export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
   console.log("Transforming jobs to scenarios:", jobs);
   const scenarios = jobs.map((job, index) => {
-    // Create the situation text using job details
+    // Create the situation text using job details (without salary)
     const situation = `${job.job_title} at ${job.company_name} (${job.location})`
     
-    // Use the salary to create more context
-    const fullSituation = job.salary_formatted 
-      ? `${situation} - ${job.salary_formatted}`
-      : situation
-
     // Default choices for job scenarios - always ensure these are set
     const optionA = { text: 'Decline', id: job.jobid || index }
     const optionB = { text: 'Apply', id: job.jobid || index }
 
     return {
-      situation: fullSituation,
+      situation,
+      salary: job.salary_formatted || undefined,
       optionA,
       optionB,
     }
@@ -171,16 +168,19 @@ export function testDefaultOptions() {
   const testScenarios = [
     {
       situation: "Normal job",
+      salary: "$80,000 - $100,000",
       optionA: { text: "Custom Decline", id: 1 },
       optionB: { text: "Custom Apply", id: 2 }
     },
     {
       situation: "Job with empty options",
+      salary: "$60,000 - $80,000",
       optionA: { text: "", id: 3 },
       optionB: { text: "", id: 4 }
     },
     {
       situation: "Job with null options",
+      salary: undefined,
       optionA: { text: null as any, id: 5 },
       optionB: { text: null as any, id: 6 }
     }

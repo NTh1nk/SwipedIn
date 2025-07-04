@@ -6,7 +6,7 @@ type CardStackProps = {
     scenarios: number[];
     currentScenarioIndex: number;
     isAnimating: boolean;
-    currentScenario: { situation: string };
+    currentScenario: { situation: string; salary?: string };
     nextCardContent: string;
     cardControls: {
         rotate: any;
@@ -80,9 +80,21 @@ export function CardStack({
                                             }}
                                         >
                                             <div className="flex-1 flex flex-col text-center items-center justify-around">
-                                                <p className="font-mono text-sm md:text-base">
-                                                    {i === currentScenarioIndex ? currentScenario.situation : nextCardContent}
-                                                </p>
+                                                <div className="flex-1 flex flex-col justify-center items-center">
+                                                    <p className="font-mono text-sm md:text-base mb-4">
+                                                        {i === currentScenarioIndex ? currentScenario.situation : nextCardContent}
+                                                    </p>
+                                                    {i === currentScenarioIndex && currentScenario.salary && (
+                                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-4 py-3 mb-4 shadow-sm">
+                                                            <div className="flex items-center justify-center space-x-2">
+                                                                <span className="text-green-600 text-lg">💰</span>
+                                                                <p className="text-green-800 font-bold text-sm">
+                                                                    {currentScenario.salary}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <div className="w-32 h-32 bg-blue-200 rounded-full" />
                                             </div>
                                         </motion.div>
