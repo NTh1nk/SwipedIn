@@ -19,6 +19,7 @@ export type ClientScenario = {
 // Load all jobs from the database
 export async function loadJobsFromDatabase(): Promise<Job[]> {
   try {
+    console.log("Loading jobs from database...");
     const { data, error } = await (supabase as any)
       .from('jobs')
       .select('*')
@@ -28,6 +29,7 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
       throw error
     }
 
+    console.log("Jobs loaded from database:", data);
     return data || []
   } catch (error) {
     console.error('Failed to load jobs from database:', error)
@@ -37,7 +39,8 @@ export async function loadJobsFromDatabase(): Promise<Job[]> {
 
 // Transform database jobs into game scenarios
 export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
-  return jobs.map((job) => {
+  console.log("Transforming jobs to scenarios:", jobs);
+  const scenarios = jobs.map((job) => {
     // Create the situation text using job details
     const situation = `${job.title} at ${job.company} (${job.location})`
     
@@ -46,7 +49,7 @@ export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
       ? `${situation} - ${job.description_text}`
       : situation
 
-    // Default choices for job scenarios
+    // Default choices for job scenarios - always ensure these are set
     const optionA = { text: 'Decline', id: job.jobid }
     const optionB = { text: 'Accept', id: job.jobid }
 
@@ -55,14 +58,33 @@ export function transformJobsToScenarios(jobs: Job[]): ClientScenario[] {
       optionA,
       optionB,
     }
-  })
+  });
+  console.log("Transformed scenarios:", scenarios);
+  return scenarios;
+}
+
+// Ensure a scenario has valid default options
+export function ensureDefaultOptions(scenario: ClientScenario): ClientScenario {
+  return {
+    ...scenario,
+    optionA: {
+      text: scenario.optionA?.text || 'Decline',
+      id: scenario.optionA?.id || 0
+    },
+    optionB: {
+      text: scenario.optionB?.text || 'Accept', 
+      id: scenario.optionB?.id || 0
+    }
+  }
 }
 
 // Load and transform jobs for the game
 export async function loadGameScenarios(): Promise<ClientScenario[]> {
   try {
     const jobs = await loadJobsFromDatabase()
-    return transformJobsToScenarios(jobs)
+    const scenarios = transformJobsToScenarios(jobs)
+    // Ensure all scenarios have valid default options
+    return scenarios.map(ensureDefaultOptions)
   } catch (error) {
     console.error('Failed to load game scenarios:', error)
     return []
@@ -135,4 +157,27 @@ export async function deleteJob(jobid: number): Promise<boolean> {
     console.error('Failed to delete job:', error)
     return false
   }
+}
+
+// Test function to demonstrate default options functionality
+export function testDefaultOptions() {
+  const testScenarios = [
+    {
+      situation: "Normal job",
+      optionA: { text: "Custom Decline", id: 1 },
+      optionB: { text: "Custom Accept", id: 2 }
+    },
+    {
+      situation: "Job with empty options",
+      optionA: { text: "", id: 3 },
+      optionB: { text: "", id: 4 }
+    },
+    {
+      situation: "Job with null options",
+      optionA: { text: null as any, id: 5 },
+      optionB: { text: null as any, id: 6 }
+    }
+  ];
+
+  return testScenarios.map(ensureDefaultOptions);
 } 

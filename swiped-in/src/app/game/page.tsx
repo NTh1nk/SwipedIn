@@ -10,7 +10,7 @@ import {
 import { StatusBar } from "./components/StatusBar";
 import { CardStack } from "./components/CardStack";
 import { ChoiceOptions } from "./components/ChoiceOptions";
-import { loadGameScenarios, type ClientScenario } from "@/lib/supabase/cardUtils";
+import { loadGameScenarios, type ClientScenario, ensureDefaultOptions } from "@/lib/supabase/cardUtils";
 import { createClient } from '@supabase/supabase-js';
 import { getJobs } from "@/lib/supabase/jobUtils";
 
@@ -33,7 +33,7 @@ const testData: ClientScenario[] = [
 	{
 		situation: "Job 1",
 		optionA: { text: "Decline", id: 1 },
-		optionB: { text: "Apply", id: 2 },
+		optionB: { text: "Accept", id: 2 },
 	},
 ];
 
@@ -76,26 +76,85 @@ export default function GameInterface() {
 	});
 
 	useEffect(() => {
+		// Temporarily use test data to verify functionality
+		console.log("Using test data for verification");
+		const testScenarios = [
+			{
+				situation: "Software Engineer at Google (Mountain View)",
+				optionA: { text: "Decline", id: 1 },
+				optionB: { text: "Accept", id: 1 }
+			},
+			{
+				situation: "Product Manager at Apple (Cupertino)",
+				optionA: { text: "", id: 2 }, // Empty option to test default
+				optionB: { text: "", id: 2 }  // Empty option to test default
+			}
+		];
+		
+		const scenariosWithDefaults = testScenarios.map(ensureDefaultOptions);
+		console.log("Test scenarios with defaults:", scenariosWithDefaults);
+		
+		setScenariosData(scenariosWithDefaults);
+		setScenarios(scenariosWithDefaults.map((_: any, index: number) => index));
+		
+		if (scenariosWithDefaults.length > 0) {
+			const firstScenario = scenariosWithDefaults[0];
+			setCurrentScenario(firstScenario);
+			choiseScenarios.current = {
+				optionA: firstScenario,
+				optionB: firstScenario,
+			};
+		}
+		setIsLoading(false);
+		
+		/* Original database loading code (commented out for testing)
 		loadGameScenarios()
 			.then((scenarios) => {
+				console.log("Loaded scenarios:", scenarios);
 				setScenariosData(scenarios);
 				// Create array of indices for CardStack
 				setScenarios(scenarios.map((_: any, index: number) => index));
 				// Set the first scenario as current
 				if (scenarios.length > 0) {
-					setCurrentScenario(scenarios[0]);
+					const firstScenario = ensureDefaultOptions(scenarios[0]);
+					setCurrentScenario(firstScenario);
 					// Set up choice scenarios
 					choiseScenarios.current = {
-						optionA: scenarios[0],
-						optionB: scenarios[0],
+						optionA: firstScenario,
+						optionB: firstScenario,
+					};
+				} else {
+					// Fallback: create a default scenario if no jobs are found
+					console.log("No scenarios found, creating fallback scenario");
+					const fallbackScenario = ensureDefaultOptions({
+						situation: "No jobs available at the moment. Check back later!",
+						optionA: { text: "Decline", id: 0 },
+						optionB: { text: "Accept", id: 0 }
+					});
+					setCurrentScenario(fallbackScenario);
+					choiseScenarios.current = {
+						optionA: fallbackScenario,
+						optionB: fallbackScenario,
 					};
 				}
 				setIsLoading(false);
 			})
 			.catch((error) => {
 				console.error("Failed to load scenarios from database:", error);
+				// Fallback: create a default scenario on error
+				const fallbackScenario = ensureDefaultOptions({
+					situation: "Unable to load jobs. Please try again later.",
+					optionA: { text: "Decline", id: 0 },
+					optionB: { text: "Accept", id: 0 }
+				});
+				setCurrentScenario(fallbackScenario);
+				choiseScenarios.current = {
+					optionA: fallbackScenario,
+					optionB: fallbackScenario,
+				};
 				setIsLoading(false);
 			});
+		*/
 	}, []);
 
 	useEffect(() => {
@@ -133,11 +192,12 @@ export default function GameInterface() {
 	// Add a useEffect to update currentScenario when currentScenarioIndex changes
 	useEffect(() => {
 		if (scenariosData.length > 0 && currentScenarioIndex < scenariosData.length) {
-			setCurrentScenario(scenariosData[currentScenarioIndex]);
+			const scenario = ensureDefaultOptions(scenariosData[currentScenarioIndex]);
+			setCurrentScenario(scenario);
 			// Update choice scenarios for the current job
 			choiseScenarios.current = {
-				optionA: scenariosData[currentScenarioIndex],
-				optionB: scenariosData[currentScenarioIndex],
+				optionA: scenario,
+				optionB: scenario,
 			};
 		}
 	}, [currentScenarioIndex, scenariosData]);
