@@ -76,38 +76,6 @@ export default function GameInterface() {
 	});
 
 	useEffect(() => {
-		// Temporarily use test data to verify functionality
-		console.log("Using test data for verification");
-		const testScenarios = [
-			{
-				situation: "Software Engineer at Google (Mountain View)",
-				optionA: { text: "Decline", id: 1 },
-				optionB: { text: "Accept", id: 1 }
-			},
-			{
-				situation: "Product Manager at Apple (Cupertino)",
-				optionA: { text: "", id: 2 }, // Empty option to test default
-				optionB: { text: "", id: 2 }  // Empty option to test default
-			}
-		];
-		
-		const scenariosWithDefaults = testScenarios.map(ensureDefaultOptions);
-		console.log("Test scenarios with defaults:", scenariosWithDefaults);
-		
-		setScenariosData(scenariosWithDefaults);
-		setScenarios(scenariosWithDefaults.map((_: any, index: number) => index));
-		
-		if (scenariosWithDefaults.length > 0) {
-			const firstScenario = scenariosWithDefaults[0];
-			setCurrentScenario(firstScenario);
-			choiseScenarios.current = {
-				optionA: firstScenario,
-				optionB: firstScenario,
-			};
-		}
-		setIsLoading(false);
-		
-		/* Original database loading code (commented out for testing)
 		loadGameScenarios()
 			.then((scenarios) => {
 				console.log("Loaded scenarios:", scenarios);
@@ -154,7 +122,6 @@ export default function GameInterface() {
 				};
 				setIsLoading(false);
 			});
-		*/
 	}, []);
 
 	useEffect(() => {

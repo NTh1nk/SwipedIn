@@ -82,6 +82,7 @@ export function ensureDefaultOptions(scenario: ClientScenario): ClientScenario {
 export async function loadGameScenarios(): Promise<ClientScenario[]> {
   try {
     const jobs = await loadJobsFromDatabase()
+    console.log("Jobs loaded:", jobs);
     const scenarios = transformJobsToScenarios(jobs)
     // Ensure all scenarios have valid default options
     return scenarios.map(ensureDefaultOptions)
