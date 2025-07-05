@@ -291,6 +291,14 @@ export default function GameInterface() {
 			<div className="mt-8 text-center font-mono">
 				<p className="text-2xl">SwipedIn</p>
 			</div>
+			<div className="mt-8 text-center">
+          <a
+            href="/apply"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            View Jobs
+          </a>
+        </div>
 			<div className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full text-black">
 				<CardStack
 					scenarios={scenarios}

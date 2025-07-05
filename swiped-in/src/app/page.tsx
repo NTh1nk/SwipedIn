@@ -6,7 +6,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="w-full py-8 flex flex-col items-center">
         <h1 className="text-5xl md:text-6xl font-extrabold text-blue-800 mb-4 drop-shadow-lg">SwipedIn</h1>
-        <p className="text-xl md:text-2xl text-blue-700 font-medium mb-2">Where Your Dream Job Is Just a Swipe Away!</p>
+        <p className="text-xl md:text-2xl text-blue-700 font-medium mb-2">The dating app for job applications!</p>
         <p className="text-md md:text-lg text-blue-600 max-w-xl text-center mb-6">
           Discover your dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal. Swipe right to apply, left to pass—just like dating, but for your career.
         </p>
@@ -14,7 +14,7 @@ export default function LandingPage() {
           href="/profile"
           className="mt-4 bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:bg-blue-700 transition"
         >
-          Start Swiping Jobs
+          Get started!
         </a>
       </header>
 
