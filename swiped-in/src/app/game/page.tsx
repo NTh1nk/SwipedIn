@@ -306,6 +306,7 @@ export default function GameInterface() {
 					isAnimating={isAnimating}
 					currentScenario={currentScenario}
 					nextCardContent={nextCardContent}
+					scenariosData={scenariosData}
 					cardControls={{
 						rotate,
 						x,
