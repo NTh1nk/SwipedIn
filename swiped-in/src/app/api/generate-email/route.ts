@@ -85,25 +85,58 @@ Format the response as JSON with "subject" and "body" fields.`;
 
     console.log('Generated text:', generatedText);
 
-    // Try to parse the JSON response
+    // Extract and parse JSON from the response
     let emailData;
     try {
+      // First, try to parse the entire response as JSON
       emailData = JSON.parse(generatedText);
-      console.log('Parsed email data:', emailData);
+      console.log('Direct JSON parse successful:', emailData);
     } catch (parseError) {
-      console.log('JSON parsing failed, using fallback');
-      // If JSON parsing fails, create a fallback response
+      console.log('Direct JSON parse failed, attempting to extract JSON from text');
+      
+      // Try to extract JSON from the text if it's wrapped in other content
+      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          emailData = JSON.parse(jsonMatch[0]);
+          console.log('Extracted JSON parse successful:', emailData);
+        } catch (extractError) {
+          console.log('JSON extraction failed:', extractError);
+          // Create fallback response
+          emailData = {
+            subject: `Application for ${job.title} position at ${job.company}`,
+            body: generatedText
+          };
+        }
+      } else {
+        console.log('No JSON found in response, using fallback');
+        // If no JSON found, create a fallback response
+        emailData = {
+          subject: `Application for ${job.title} position at ${job.company}`,
+          body: generatedText
+        };
+      }
+    }
+
+    // Clean and validate the extracted data
+    if (emailData && typeof emailData === 'object') {
+      // Ensure subject and body are strings and trim whitespace
+      emailData = {
+        subject: (emailData.subject || `Application for ${job.title} position at ${job.company}`).toString().trim(),
+        body: (emailData.body || generatedText).toString().trim()
+      };
+      
+      // Validate subject length
+      if (emailData.subject.length > 60) {
+        emailData.subject = emailData.subject.substring(0, 57) + '...';
+      }
+      
+      console.log('Cleaned email data:', emailData);
+    } else {
+      // Fallback if emailData is not an object
       emailData = {
         subject: `Application for ${job.title} position at ${job.company}`,
         body: generatedText
-      };
-    }
-
-    // Ensure we have the required fields
-    if (!emailData.subject || !emailData.body) {
-      emailData = {
-        subject: emailData.subject || `Application for ${job.title} position at ${job.company}`,
-        body: emailData.body || generatedText
       };
     }
 
