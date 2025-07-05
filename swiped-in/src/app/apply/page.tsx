@@ -11,8 +11,21 @@ type AppliedJob = {
   company_rating?: number;
 };
 
+type EmailData = {
+  subject: string;
+  body: string;
+  isLoading: boolean;
+};
+
 export default function ApplyPage() {
   const [jobs, setJobs] = useState<AppliedJob[]>([]);
+  const [selectedJob, setSelectedJob] = useState<AppliedJob | null>(null);
+  const [emailData, setEmailData] = useState<EmailData>({
+    subject: "",
+    body: "",
+    isLoading: false
+  });
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   useEffect(() => {
     // Get jobs from localStorage
@@ -25,6 +38,73 @@ export default function ApplyPage() {
   const handleApply = (jobid?: number) => {
     alert("Application sent! (Demo only)");
     // Here you could trigger a real application process
+  };
+
+  const generateEmail = async (job: AppliedJob) => {
+    setSelectedJob(job);
+    setShowEmailModal(true);
+    setEmailData({ subject: "", body: "", isLoading: true });
+
+    try {
+      // Get resume from localStorage (assuming it's stored there from profile page)
+      const resumeData = localStorage.getItem("resumeData") || "No resume uploaded";
+      console.log("Resume data length:", resumeData.length);
+      
+      const requestBody = {
+        job: {
+          title: job.job_title,
+          company: job.company_name,
+          location: job.location,
+          salary: job.salary_formatted,
+          rating: job.company_rating
+        },
+        resume: resumeData
+      };
+      
+      console.log("Sending request to API:", requestBody);
+      
+      const response = await fetch("/api/generate-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("API response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API error response:", errorData);
+        throw new Error(`API Error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      console.log("API success response:", data);
+      
+      setEmailData({
+        subject: data.subject,
+        body: data.body,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error("Error generating email:", error);
+      setEmailData({
+        subject: "Error",
+        body: `Failed to generate email: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your OpenAI API key configuration.`,
+        isLoading: false
+      });
+    }
+  };
+
+  const copyToClipboard = async () => {
+    const emailText = `Subject: ${emailData.subject}\n\n${emailData.body}`;
+    try {
+      await navigator.clipboard.writeText(emailText);
+      alert("Email copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy:", error);
+    }
   };
 
   return (
@@ -47,17 +127,78 @@ export default function ApplyPage() {
                     <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
                   )}
                 </div>
-                <button
-                  className="mt-4 md:mt-0 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
-                  onClick={() => handleApply(job.jobid)}
-                >
-                  Apply
-                </button>
+                <div className="mt-4 md:mt-0 flex gap-2">
+                  <button
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+                    onClick={() => generateEmail(job)}
+                  >
+                    Generate Email
+                  </button>
+                  <button
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                    onClick={() => handleApply(job.jobid)}
+                  >
+                    Apply
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-blue-900">
+                  Generated Email for {selectedJob?.job_title} at {selectedJob?.company_name}
+                </h2>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {emailData.isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Generating your custom email...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject:</label>
+                    <div className="bg-gray-50 p-3 rounded border">{emailData.subject}</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Body:</label>
+                    <div className="bg-gray-50 p-3 rounded border whitespace-pre-wrap">{emailData.body}</div>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={copyToClipboard}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                    >
+                      Copy to Clipboard
+                    </button>
+                    <button
+                      onClick={() => setShowEmailModal(false)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

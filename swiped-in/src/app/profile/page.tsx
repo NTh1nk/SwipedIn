@@ -19,7 +19,7 @@ const JOB_CATEGORIES = [
 
 export default function ProfilePage() {
   const [resume, setResume] = useState<File | null>(null);
-  const [resumeText, setResumeText] = useState("");
+  const [resumeText, setResumeText] = useState<string>("");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,23 +31,22 @@ export default function ProfilePage() {
     setSelectedCategories(options);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setResume(file);
-      setResumeText("");
-      setSummary("");
-      setError("");
       
-      // Extract text from the file
-      extractTextFromFile(file)
-        .then(text => {
-          const cleanedText = cleanResumeText(text);
-          setResumeText(cleanedText);
-        })
-        .catch(err => {
-          setError(err.message);
-        });
+      // Read the file content and store it
+      try {
+        const text = await file.text();
+        setResumeText(text);
+        // Store in localStorage for email generation
+        localStorage.setItem("resumeData", text);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        // If we can't read the file, store the filename
+        localStorage.setItem("resumeData", `Resume file: ${file.name}`);
+      }
     }
   };
 
