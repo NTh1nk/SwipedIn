@@ -173,11 +173,11 @@ export default function ApplyPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Subject:</label>
-                    <div className="bg-gray-50 p-3 rounded border">{emailData.subject}</div>
+                    <div className="bg-gray-50 p-3 rounded border text-gray-700">{emailData.subject}</div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Body:</label>
-                    <div className="bg-gray-50 p-3 rounded border whitespace-pre-wrap">{emailData.body}</div>
+                    <div className="bg-gray-50 p-3 rounded border whitespace-pre-wrap text-gray-700">{emailData.body}</div>
                   </div>
                   <div className="flex gap-2 pt-4">
                     <button
