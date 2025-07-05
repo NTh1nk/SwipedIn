@@ -15,19 +15,9 @@ export async function POST(request: NextRequest) {
     console.log('Job data:', job);
     console.log('Resume length:', resume?.length || 0);
 
-    // Check if OpenAI API key is configured
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
-      console.error('OpenAI API key not configured');
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your environment variables.' },
-        { status: 500 }
-      );
-    }
+    console.log('Using Hack Club AI service');
 
-    console.log('OpenAI API key found, proceeding with request');
-
-    // Create the prompt for GPT-3.5 Turbo
+    // Create the prompt for Hack Club AI
     const prompt = `You are an expert job application writer. Generate a professional and personalized application email for the following job:
 
 Job Details:
@@ -52,17 +42,15 @@ Please create:
 
 Format the response as JSON with "subject" and "body" fields.`;
 
-    console.log('Sending request to OpenAI...');
+    console.log('Sending request to Hack Club AI...');
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Hack Club AI API
+    const response = await fetch('https://ai.hackclub.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
@@ -78,21 +66,21 @@ Format the response as JSON with "subject" and "body" fields.`;
       }),
     });
 
-    console.log('OpenAI response status:', response.status);
+    console.log('Hack Club AI response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error response:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      console.error('Hack Club AI API error response:', errorText);
+      throw new Error(`Hack Club AI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response data:', data);
+    console.log('Hack Club AI response data:', data);
     
     const generatedText = data.choices[0]?.message?.content;
 
     if (!generatedText) {
-      throw new Error('No response from OpenAI');
+      throw new Error('No response from Hack Club AI');
     }
 
     console.log('Generated text:', generatedText);
