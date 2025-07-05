@@ -109,6 +109,30 @@ export default function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
+      {/* Profile Icon */}
+      <div className="absolute top-4 right-4">
+        <a
+          href="/profile"
+          className="shadow-md hover:shadow-lg transition-shadow duration-200"
+          title="Go to Profile"
+        >
+          <svg
+            className="w-6 h-6 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+        </a>
+      </div>
+      
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">Jobs You Want to Apply To</h1>
         {jobs.length === 0 ? (
