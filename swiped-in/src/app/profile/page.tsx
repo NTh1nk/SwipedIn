@@ -56,6 +56,7 @@ export default function ProfilePage() {
     }
     localStorage.setItem("resumeData", resumeText);
     console.log("Resume saved to localStorage: " + resumeText);
+    alert("saved resume");
   }
 
   const handleSummarize = async () => {
