@@ -22,14 +22,27 @@ export type ClientScenario = {
   optionB: { text: string; id: number }
 }
 
-// Load jobs from the database with pagination
+// Load jobs from the database with random order
 export async function loadJobsFromDatabase(offset: number = 0, limit: number = 10): Promise<Job[]> {
   try {
     console.log(`Loading jobs from database (offset: ${offset}, limit: ${limit})...`);
+    
+    // First, get the total count of jobs
+    const { count } = await (supabase as any)
+      .from('jobs')
+      .select('*', { count: 'exact', head: true });
+    
+    if (count === 0) {
+      return [];
+    }
+    
+    // Generate random offset to get different jobs each time
+    const randomOffset = Math.floor(Math.random() * Math.max(1, count - limit));
+    
     const { data, error } = await (supabase as any)
       .from('jobs')
       .select('job_title, company_name, location, salary_formatted, company_rating')
-      .range(offset, offset + limit - 1)
+      .range(randomOffset, randomOffset + limit - 1)
 
     if (error) {
       console.error('Error loading jobs from database:', error)

@@ -9,6 +9,7 @@ type AppliedJob = {
   location: string;
   salary_formatted?: string;
   company_rating?: number;
+  apply_link?: string;
 };
 
 type EmailData = {
@@ -36,7 +37,14 @@ export default function ApplyPage() {
   }, []);
 
   const handleApply = (jobid?: number) => {
-    alert("Application sent! (Demo only)");
+  
+    const applicationLink = jobs.find(job => job.jobid === jobid)?.apply_link;
+    if (applicationLink) {
+      window.open(applicationLink, '_blank');
+    } else {
+      alert("No application link found for this job.");
+    }
+
     // Here you could trigger a real application process
   };
 
@@ -56,7 +64,8 @@ export default function ApplyPage() {
           company: job.company_name,
           location: job.location,
           salary: job.salary_formatted,
-          rating: job.company_rating
+          rating: job.company_rating,
+          apply_link: job.apply_link
         },
         resume: resumeData
       };
