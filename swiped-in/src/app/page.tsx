@@ -56,8 +56,8 @@ export default function LandingPage() {
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
             <span className="text-4xl mb-2">🤖</span>
-            <h3 className="text-lg font-bold text-blue-800 mb-2">AI-Powered Resume Insights</h3>
-            <p className="text-gray-600 text-center">Get instant feedback and summaries of your resume. Stand out to employers with AI-optimized applications.</p>
+            <h3 className="text-lg font-bold text-blue-800 mb-2">AI-Powered Email Generator</h3>
+            <p className="text-gray-600 text-center">Generate personalized emails for each job you apply to. Stand out to employers with AI-optimized applications.</p>
           </div>
         </div>
       </section>

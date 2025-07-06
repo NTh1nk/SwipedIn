@@ -280,7 +280,7 @@ export default function GameInterface() {
 	// }, [currentScenario]);
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return <div className="min-h-screen bg-blue-100 text-black text-center flex flex-col overflow-hidden">Loading...</div>;
 	}
 
 	if (!currentScenario) {
