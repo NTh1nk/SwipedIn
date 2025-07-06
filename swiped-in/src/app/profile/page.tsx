@@ -96,7 +96,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Resume Analyzer</h1>
         
-        {/* Category Selection */}
+        {/* Category Selection */} {/* TODO: Add category selection 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Select Job Categories</h2>
           <select
@@ -114,7 +114,7 @@ export default function ProfilePage() {
               ? `Selected: ${selectedCategories.join(", ")}`
               : "No categories selected"}
           </div>
-        </div>
+        </div>*/}
 
         {/* File Upload Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -151,7 +151,7 @@ export default function ProfilePage() {
               placeholder="Paste your resume content here..."
               rows={12}
               className="w-full border text-gray-900 border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            />  
           </div>
           
           {error && (
