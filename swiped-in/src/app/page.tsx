@@ -1,4 +1,27 @@
-"use client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SwipedIn - The Dating App for Job Applications",
+  description: "Discover your dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal. Swipe right to apply, left to pass—just like dating, but for your career.",
+  openGraph: {
+    title: "SwipedIn - The Dating App for Job Applications",
+    description: "Discover your dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal.",
+    images: [
+      {
+        url: "/logo.svg",
+        width: 1200,
+        height: 630,
+        alt: "SwipedIn Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SwipedIn - The Dating App for Job Applications",
+    description: "Discover your dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal.",
+    images: ["/logo.svg"],
+  },
+};
 
 export default function LandingPage() {
   return (
