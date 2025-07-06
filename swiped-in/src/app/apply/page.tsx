@@ -40,7 +40,7 @@ export default function ApplyPage() {
   
     const applicationLink = jobs.find(job => job.jobid === jobid)?.apply_link;
     if (applicationLink) {
-      window.open(applicationLink, '_blank');
+      window.open(applicationLink);
     } else {
       alert("No application link found for this job.");
       console.log("jobs" + jobs);
