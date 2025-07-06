@@ -20,6 +20,8 @@ type EmailData = {
 
 export default function ApplyPage() {
   const [jobs, setJobs] = useState<AppliedJob[]>([]);
+  const [archivedJobs, setArchivedJobs] = useState<AppliedJob[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [selectedJob, setSelectedJob] = useState<AppliedJob | null>(null);
   const [emailData, setEmailData] = useState<EmailData>({
     subject: "",
@@ -34,6 +36,12 @@ export default function ApplyPage() {
     if (stored) {
       setJobs(JSON.parse(stored));
     }
+    
+    // Get archived jobs from localStorage
+    const storedArchived = localStorage.getItem("archivedJobs");
+    if (storedArchived) {
+      setArchivedJobs(JSON.parse(storedArchived));
+    }
   }, []);
 
   const handleApply = (jobid?: number) => {
@@ -44,9 +52,41 @@ export default function ApplyPage() {
     } else {
       alert("No application link found for this job.");
       console.log("jobs" + jobs);
-    }
+    } 
 
     // Here you could trigger a real application process
+  };
+
+  const handleArchive = (jobToArchive: AppliedJob) => {
+    // Remove from active jobs
+    const updatedJobs = jobs.filter(job => 
+      job.jobid !== jobToArchive.jobid || 
+      job.job_title !== jobToArchive.job_title || 
+      job.company_name !== jobToArchive.company_name
+    );
+    setJobs(updatedJobs);
+    localStorage.setItem("appliedJobs", JSON.stringify(updatedJobs));
+    
+    // Add to archived jobs
+    const updatedArchivedJobs = [...archivedJobs, jobToArchive];
+    setArchivedJobs(updatedArchivedJobs);
+    localStorage.setItem("archivedJobs", JSON.stringify(updatedArchivedJobs));
+  };
+
+  const handleUnarchive = (jobToUnarchive: AppliedJob) => {
+    // Remove from archived jobs
+    const updatedArchivedJobs = archivedJobs.filter(job => 
+      job.jobid !== jobToUnarchive.jobid || 
+      job.job_title !== jobToUnarchive.job_title || 
+      job.company_name !== jobToUnarchive.company_name
+    );
+    setArchivedJobs(updatedArchivedJobs);
+    localStorage.setItem("archivedJobs", JSON.stringify(updatedArchivedJobs));
+    
+    // Add back to active jobs
+    const updatedJobs = [...jobs, jobToUnarchive];
+    setJobs(updatedJobs);
+    localStorage.setItem("appliedJobs", JSON.stringify(updatedJobs));
   };
 
   const generateEmail = async (job: AppliedJob) => {
@@ -144,40 +184,109 @@ export default function ApplyPage() {
       </div>
       
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">Jobs You Want to Apply To</h1>
-        {jobs.length === 0 ? (
-          <div className="text-center text-gray-500">You haven't swiped right on any jobs yet.</div>
+        <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">
+          {showArchived ? "Archived Jobs" : "Jobs You Want to Apply To"}
+        </h1>
+        
+        {/* Toggle between active and archived jobs */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-white rounded-lg shadow p-1 flex">
+            <button
+              onClick={() => setShowArchived(false)}
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                !showArchived
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Active ({jobs.length})
+            </button>
+            <button
+              onClick={() => setShowArchived(true)}
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                showArchived
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Archived ({archivedJobs.length})
+            </button>
+          </div>
+        </div>
+
+        {showArchived ? (
+          // Archived jobs view
+          archivedJobs.length === 0 ? (
+            <div className="text-center text-gray-500">No archived jobs yet.</div>
+          ) : (
+            <ul className="space-y-6">
+              {archivedJobs.map((job, idx) => (
+                <li key={job.jobid ?? `${job.job_title}-${job.company_name}-${idx}`} className="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between opacity-75">
+                  <div>
+                    <div className="font-bold text-lg text-gray-700">{job.job_title}</div>
+                    <div className="text-gray-600">{job.company_name} &middot; {job.location}</div>
+                    {job.salary_formatted && (
+                      <div className="text-green-700 font-semibold mt-1">💰 {job.salary_formatted}</div>
+                    )}
+                    {job.company_rating !== undefined && (
+                      <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
+                    )}
+                  </div>
+                  <div className="mt-4 md:mt-0 flex gap-2">
+                    <button
+                      className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+                      onClick={() => handleUnarchive(job)}
+                    >
+                      Unarchive
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <ul className="space-y-6">
-            {jobs.map((job, idx) => (
-              <li key={job.jobid ?? `${job.job_title}-${job.company_name}-${idx}`} className="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="font-bold text-lg text-blue-900">{job.job_title}</div>
-                  <div className="text-blue-700">{job.company_name} &middot; {job.location}</div>
-                  {job.salary_formatted && (
-                    <div className="text-green-700 font-semibold mt-1">💰 {job.salary_formatted}</div>
-                  )}
-                  {job.company_rating !== undefined && (
-                    <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
-                  )}
-                </div>
-                <div className="mt-4 md:mt-0 flex gap-2">
-                  <button
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
-                    onClick={() => generateEmail(job)}
-                  >
-                    Generate Email
-                  </button>
-                  <button
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
-                    onClick={() => handleApply(job.jobid)}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          // Active jobs view
+          jobs.length === 0 ? (
+            <div className="text-center text-gray-500">You haven't swiped right on any jobs yet.</div>
+          ) : (
+            <ul className="space-y-6">
+              {jobs.map((job, idx) => (
+                <li key={job.jobid ?? `${job.job_title}-${job.company_name}-${idx}`} className="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="font-bold text-lg text-blue-900">{job.job_title}</div>
+                    <div className="text-blue-700">{job.company_name} &middot; {job.location}</div>
+                    {job.salary_formatted && (
+                      <div className="text-green-700 font-semibold mt-1">💰 {job.salary_formatted}</div>
+                    )}
+                    {job.company_rating !== undefined && (
+                      <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
+                    )}
+                  </div>
+                  <div className="mt-4 md:mt-0 flex gap-2">
+                    <button
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+                      onClick={() => generateEmail(job)}
+                    >
+                      Generate Email
+                    </button>
+                    <button
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                      onClick={() => handleApply(job.jobid)}
+                    >
+                      Apply
+                    </button>
+                    <button
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition"
+                      onClick={() => handleArchive(job)}
+                      title="Archive this job"
+                    >
+                      Archive
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
         )}
       </div>
 
