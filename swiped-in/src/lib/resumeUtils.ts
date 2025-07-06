@@ -1,26 +1,46 @@
 // Utility functions for resume processing
 
 export async function extractTextFromFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (file.type === "text/plain") {
-      // Handle plain text files
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (file.type === "text/plain") {
+        // Handle plain text files
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          resolve(text);
+        };
+        reader.onerror = () => reject(new Error("Failed to read text file"));
+        reader.readAsText(file);
+      } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf')) {
+        // Handle PDF files using pdfjs-dist
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = await import('pdfjs-dist');
+        // @ts-ignore
+        const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+        // @ts-ignore
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map((item: any) => item.str).join(' ') + '\n';
+        }
         resolve(text);
-      };
-      reader.onerror = () => reject(new Error("Failed to read text file"));
-      reader.readAsText(file);
-    } else if (file.type === "application/pdf") {
-      // For PDF files, we'll need a PDF parser library
-      // You can install: npm install pdf-parse
-      reject(new Error("PDF parsing requires additional setup. Please paste text manually."));
-    } else if (file.type.includes("word") || file.type.includes("document")) {
-      // For Word documents, we'll need a DOCX parser library
-      // You can install: npm install mammoth
-      reject(new Error("Word document parsing requires additional setup. Please paste text manually."));
-    } else {
-      reject(new Error("Unsupported file type"));
+      } else if (file.type.includes("word") || file.type.includes("document") || 
+                 file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc')) {
+        // Handle Word documents using mammoth
+        const arrayBuffer = await file.arrayBuffer();
+        const mammoth = await import('mammoth');
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        resolve(result.value);
+      } else {
+        reject(new Error("Unsupported file type. Please use .txt, .pdf, .doc, or .docx files."));
+      }
+    } catch (error: any) {
+      reject(new Error(`Failed to parse file: ${error.message}`));
     }
   });
 }

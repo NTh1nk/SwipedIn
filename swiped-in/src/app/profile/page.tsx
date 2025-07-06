@@ -36,15 +36,17 @@ export default function ProfilePage() {
       const file = e.target.files[0];
       setResume(file);
       
-      // Read the file content and store it
+      // Use the utility function to extract text from the file
       try {
-        const text = await file.text();
+        const text = await extractTextFromFile(file);
         setResumeText(text);
         // Store in localStorage for email generation
         localStorage.setItem("resumeData", text);
-      } catch (error) {
+        setError(""); // Clear any previous errors
+      } catch (error: any) {
         console.error("Error reading file:", error);
-        // If we can't read the file, store the filename
+        setError(error.message || "Failed to read file");
+        // If we can't read the file, store the filename as fallback
         localStorage.setItem("resumeData", `Resume file: ${file.name}`);
       }
     }
