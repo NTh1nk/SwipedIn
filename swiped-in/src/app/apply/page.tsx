@@ -43,6 +43,7 @@ export default function ApplyPage() {
       window.open(applicationLink, '_blank');
     } else {
       alert("No application link found for this job.");
+      console.log("jobs" + jobs);
     }
 
     // Here you could trigger a real application process

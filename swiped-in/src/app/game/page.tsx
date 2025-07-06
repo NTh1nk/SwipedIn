@@ -22,6 +22,7 @@ type ClientScenario = {
 	location: string;
 	salary?: string;
 	company_rating?: number;
+	apply_link?: string;
 	optionA: { text: string; id: number };
 	optionB: { text: string; id: number };
 };
