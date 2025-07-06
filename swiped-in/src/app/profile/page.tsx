@@ -49,6 +49,14 @@ export default function ProfilePage() {
       }
     }
   };
+  const handleSaveResume = async () => {
+    if (!resumeText.trim()) {
+      setError("Please provide resume text to save.");
+      return;
+    }
+    localStorage.setItem("resumeData", resumeText);
+    console.log("Resume saved to localStorage: " + resumeText);
+  }
 
   const handleSummarize = async () => {
     if (!resumeText.trim()) {
@@ -148,11 +156,11 @@ export default function ProfilePage() {
           )}
           
           <button
-            onClick={handleSummarize}
+            onClick={handleSaveResume}
             disabled={loading || !resumeText.trim()}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Generating Summary..." : "Generate Summary"}
+            {loading ? "Saving resume..." : "Save resume"}
           </button>
         </div>
 
