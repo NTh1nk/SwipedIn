@@ -16,10 +16,8 @@ export async function extractTextFromFile(file: File): Promise<string> {
         // Handle PDF files using pdfjs-dist
         const arrayBuffer = await file.arrayBuffer();
         const pdfjsLib = await import('pdfjs-dist');
-        // @ts-ignore
-        const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
-        // @ts-ignore
-        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+        // Use local workerSrc for maximum compatibility
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
         let text = '';
