@@ -198,10 +198,47 @@ export default function GameInterface() {
       // Extract keywords from resume
       const keywords = await extractKeywordsWithLLM(resume, ALLOWED_KEYWORDS);
       if (keywords) {
-        // Fetch jobs
-        const jobs = await getJobs();
-        // Use keyword matching to sort jobs
-        const recommendations = simpleKeywordMatching(keywords, jobs, 50);
+        // Fetch ALL jobs from Supabase (not just 10)
+        const { data: allJobs, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('jobid', { ascending: true })
+          .limit(100);
+        
+        if (error) {
+          console.error('Error fetching jobs:', error);
+          // Fallback to random jobs
+          loadGameScenarios()
+            .then((scenarios) => {
+              setScenariosData(scenarios);
+              setScenarios(scenarios.map((_: any, index: number) => index));
+              setCurrentScenario(scenarios[0] || null);
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              const fallbackScenario = ensureDefaultOptions({
+                situation: "Unable to load jobs. Please try again later.",
+                job_title: "Error",
+                company_name: "System",
+                location: "N/A",
+                salary: undefined,
+                optionA: { text: "Decline", id: 0 },
+                optionB: { text: "Apply", id: 0 }
+              });
+              setCurrentScenario(fallbackScenario);
+              setScenariosData([fallbackScenario]);
+              setScenarios([0]);
+              setIsLoading(false);
+            });
+          return;
+        }
+        
+        console.log(`Loaded ${allJobs?.length || 0} jobs from database`);
+        
+        // Use keyword matching to sort ALL jobs
+        const recommendations = simpleKeywordMatching(keywords, allJobs || [], 50);
+        console.log(`Sorted ${recommendations.length} jobs by match score`);
+        
         // Convert to scenarios
         const scenarios = recommendations.map((rec, idx) => ensureDefaultOptions({
           situation: `${rec.job.job_title || rec.job.title} at ${rec.job.company_name || rec.job.company} (${rec.job.location || rec.job.job_location})`,
@@ -222,32 +259,32 @@ export default function GameInterface() {
       }
     }
     // Fallback: load random jobs as before
-		loadGameScenarios()
-			.then((scenarios) => {
-				setScenariosData(scenarios);
-				setScenarios(scenarios.map((_: any, index: number) => index));
+    loadGameScenarios()
+      .then((scenarios) => {
+        setScenariosData(scenarios);
+        setScenarios(scenarios.map((_: any, index: number) => index));
         setCurrentScenario(scenarios[0] || null);
-				setIsLoading(false);
-			})
-			.catch((error) => {
-				const fallbackScenario = ensureDefaultOptions({
-					situation: "Unable to load jobs. Please try again later.",
-					job_title: "Error",
-					company_name: "System",
-					location: "N/A",
-					salary: undefined,
-					optionA: { text: "Decline", id: 0 },
-					optionB: { text: "Apply", id: 0 }
-				});
-				setCurrentScenario(fallbackScenario);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const fallbackScenario = ensureDefaultOptions({
+          situation: "Unable to load jobs. Please try again later.",
+          job_title: "Error",
+          company_name: "System",
+          location: "N/A",
+          salary: undefined,
+          optionA: { text: "Decline", id: 0 },
+          optionB: { text: "Apply", id: 0 }
+        });
+        setCurrentScenario(fallbackScenario);
         setScenariosData([fallbackScenario]);
         setScenarios([0]);
-				setIsLoading(false);
-			});
+        setIsLoading(false);
+      });
   }
   loadAndMatchJobs();
   // eslint-disable-next-line
-	}, []);
+}, []);
 
 	// Check if we need to load more scenarios when currentScenarioIndex changes
 	useEffect(() => {
