@@ -40,7 +40,7 @@ export function CardStack({
                     visibleCards.map(
                         (i) => (
                             <motion.div
-                                key={`${i}`}
+                                key={`${i}-${scenariosData[i]?.situation || 'loading'}`}
                                 animate={{
                                     scale: 0.95 ** (i - currentScenarioIndex),
                                     y: (i - currentScenarioIndex) * 30,
@@ -86,30 +86,9 @@ export function CardStack({
                                             <div className="flex-1 flex flex-col text-center items-center justify-around">
                                                 <div className="flex-1 flex flex-col justify-center items-center">
                                                     <p className="font-mono text-sm md:text-base mb-10">
-                                                        {i === currentScenarioIndex 
-                                                            ? currentScenario.situation 
-                                                            : scenariosData[i]?.situation || "Loading..."}
+                                                        {scenariosData[i]?.situation || "Loading..."}
                                                     </p>
-                                                    {i === currentScenarioIndex && currentScenario.company_rating !== undefined && (
-                                                        <div className="flex items-center justify-center mb-5">
-                                                            <span className="bg-yellow-100 border  border-yellow-300 rounded-full px-3 py-1 text-yellow-800 font-semibold text-xs flex items-center gap-1">
-                                                                ⭐
-                                                                <span>{currentScenario.company_rating.toFixed(1)}</span>
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {i === currentScenarioIndex && currentScenario.salary && (
-                                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-4 py-3 mb-4 shadow-sm">
-                                                            <div className="flex items-center justify-center space-x-2">
-                                                                <span className="text-green-600 text-lg">💰</span>
-                                                                <p className="text-green-800 font-bold text-sm">
-                                                                    {currentScenario.salary}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {/* Show rating and salary for next cards too */}
-                                                    {i !== currentScenarioIndex && scenariosData[i]?.company_rating !== undefined && (
+                                                    {scenariosData[i]?.company_rating !== undefined && (
                                                         <div className="flex items-center justify-center mb-5">
                                                             <span className="bg-yellow-100 border  border-yellow-300 rounded-full px-3 py-1 text-yellow-800 font-semibold text-xs flex items-center gap-1">
                                                                 ⭐
@@ -117,7 +96,7 @@ export function CardStack({
                                                             </span>
                                                         </div>
                                                     )}
-                                                    {i !== currentScenarioIndex && scenariosData[i]?.salary && (
+                                                    {scenariosData[i]?.salary && (
                                                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-4 py-3 mb-4 shadow-sm">
                                                             <div className="flex items-center justify-center space-x-2">
                                                                 <span className="text-green-600 text-lg">💰</span>
