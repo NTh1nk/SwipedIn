@@ -320,6 +320,42 @@ export default function GameInterface() {
 			setNextCardContent(choiseScenarios.current.optionB?.situation || "");
 		}
 	});
+	
+	// Add keyboard navigation with useEffect
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "ArrowLeft") {
+				event.preventDefault();
+				if (currentScenarioIndex > 0) {
+					mainControls.start({
+						x: -200,
+					});
+					setNextCardContent(choiseScenarios.current.optionA?.situation || "");
+					setCurrentScenarioIndex(prev => prev + 1);
+					mainControls.start({
+						x: 0,
+					});
+				}
+			}
+			if (event.key === "ArrowRight") {
+				event.preventDefault();
+				if (currentScenarioIndex < scenariosData.length - 1) {
+					mainControls.start({
+						x: 200,
+					});
+					setNextCardContent(choiseScenarios.current.optionB?.situation || "");
+					setCurrentScenarioIndex(prev => prev + 1);
+					mainControls.start({
+						x: 0,
+					});
+				}
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [mainControls, currentScenarioIndex, scenariosData.length]);
+
 
 	// const opacity = useTransform(x, [-200, 0, 200], [0, 1, 0]);
 
