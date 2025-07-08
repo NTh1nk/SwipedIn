@@ -198,7 +198,7 @@ export default function GameInterface() {
       // Extract keywords from resume
       const keywords = await extractKeywordsWithLLM(resume, ALLOWED_KEYWORDS);
       if (keywords) {
-        // Fetch ALL jobs from Supabase (not just 10)
+        // Fetch 100 jobs from Supabase to find the best matches
         const { data: allJobs, error } = await supabase
           .from('jobs')
           .select('*')
@@ -235,11 +235,11 @@ export default function GameInterface() {
         
         console.log(`Loaded ${allJobs?.length || 0} jobs from database`);
         
-        // Use keyword matching to sort ALL jobs
-        const recommendations = simpleKeywordMatching(keywords, allJobs || [], 50);
-        console.log(`Sorted ${recommendations.length} jobs by match score`);
+        // Use keyword matching to find the best 10 jobs from the 100
+        const recommendations = simpleKeywordMatching(keywords, allJobs || [], 10);
+        console.log(`Selected top ${recommendations.length} jobs by match score`);
         
-        // Convert to scenarios
+        // Convert only the top 10 to scenarios
         const scenarios = recommendations.map((rec, idx) => ensureDefaultOptions({
           situation: `${rec.job.job_title || rec.job.title} at ${rec.job.company_name || rec.job.company} (${rec.job.location || rec.job.job_location})`,
           job_title: rec.job.job_title || rec.job.title,
