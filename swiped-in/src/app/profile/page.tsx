@@ -40,6 +40,9 @@ export default function ProfilePage() {
       try {
         const text = await extractTextFromFile(file);
         setResumeText(text);
+
+        // delete the resumeData from localStorage
+        localStorage.removeItem("resumeData");
         // Store in localStorage for email generation
         localStorage.setItem("resumeData", text);
         setError(""); // Clear any previous errors
@@ -56,6 +59,11 @@ export default function ProfilePage() {
       setError("Please provide resume text to save.");
       return;
     }
+    
+    // Delete old resume data from localStorage
+    localStorage.removeItem("resumeData");
+    localStorage.removeItem("resumeText");
+    
     localStorage.setItem("resumeData", resumeText);
     console.log("Resume saved to localStorage: " + resumeText);
     alert("saved resume");

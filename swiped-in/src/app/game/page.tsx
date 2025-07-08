@@ -49,6 +49,99 @@ const supabase = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Import for keyword extraction and matching
+const ALLOWED_KEYWORDS = [
+  'python', 'javascript', 'react', 'node', 'java', 'c++', 'c#', 'php', 'ruby', 'go', 'rust',
+  'html', 'css', 'sql', 'mongodb', 'postgresql', 'mysql', 'redis', 'docker', 'kubernetes',
+  'aws', 'azure', 'gcp', 'cloud', 'devops', 'ci/cd', 'git', 'github', 'agile', 'scrum',
+  'developer', 'engineer', 'programmer', 'coder', 'architect', 'analyst', 'scientist',
+  'manager', 'lead', 'senior', 'junior', 'full stack', 'frontend', 'backend', 'mobile',
+  'web', 'software', 'hardware', 'system', 'network', 'security', 'database', 'data',
+  'machine learning', 'ai', 'artificial intelligence', 'nlp', 'computer vision', 'deep learning',
+  'designer', 'ui', 'ux', 'user interface', 'user experience', 'product', 'project',
+  'business', 'marketing', 'sales', 'customer', 'support', 'operations', 'finance',
+  'hr', 'human resources', 'legal', 'medical', 'healthcare', 'education', 'research',
+  'experience', 'years', 'team', 'collaboration', 'communication', 'leadership',
+  'problem solving', 'analysis', 'planning', 'organization', 'management',
+  'remote', 'onsite', 'hybrid', 'full time', 'part time', 'contract', 'freelance',
+  'degree', 'bachelor', 'master', 'phd', 'certification', 'certified', 'training',
+  'course', 'workshop', 'seminar', 'conference', 'meetup'
+];
+
+// Fix: add types to parameters and return type
+async function extractKeywordsWithLLM(resume: string, allowedKeywords: string[]): Promise<string | null> {
+  const allowedKeywordsStr = allowedKeywords.join(', ');
+  const prompt = `Extract the most relevant keywords from this resume, separated by commas. Only output the keywords, nothing else. You must only use keywords from the following list:\n${allowedKeywordsStr}\n\nResume:\n${resume}`;
+  const response = await fetch('https://ai.hackclub.com/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [ { role: 'user', content: prompt } ],
+      stream: false
+    }),
+  });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) return null;
+  return content.replace(/\n/g, '').replace(/^Keywords: */i, '').trim();
+}
+
+function createJobDescriptions(jobs: any[]): string[] {
+  const descriptions = [];
+  for (const job of jobs) {
+    const title = job.job_title || job.title || job.position || 'Unknown Position';
+    const company = job.company_name || job.company || 'Unknown Company';
+    const location = job.location || job.job_location || 'Unknown Location';
+    const description = job.description || job.description_text || job.job_description || '';
+    const descriptionText = `${title} at ${company} in ${location}. ${description}`;
+    descriptions.push(descriptionText);
+  }
+  return descriptions;
+}
+
+function simpleKeywordMatching(resumeText: string, jobs: any[], topK: number = 50) {
+  const resumeLower = resumeText.toLowerCase();
+  const jobDescriptions = createJobDescriptions(jobs);
+  const keywords = ALLOWED_KEYWORDS;
+  const scores = [];
+  for (let i = 0; i < jobs.length; i++) {
+    const jobDesc = jobDescriptions[i];
+    const jobLower = jobDesc.toLowerCase();
+    let score = 0;
+    const matchedKeywords = [];
+    for (const keyword of keywords) {
+      if (resumeLower.includes(keyword) && jobLower.includes(keyword)) {
+        score += 1;
+        matchedKeywords.push(keyword);
+      }
+    }
+    // Bonus for environmental jobs
+    if (['garbage', 'collector', 'waste', 'recycling'].some(word => resumeLower.includes(word))) {
+      if (['environmental', 'waste', 'recycling', 'sustainability', 'operations', 'maintenance'].some(word => jobLower.includes(word))) {
+        score += 2;
+      }
+    }
+    // Bonus for general work experience terms
+    const generalTerms = ['experience', 'work', 'job', 'position', 'role', 'responsibility'];
+    for (const term of generalTerms) {
+      if (resumeLower.includes(term) && jobLower.includes(term)) {
+        score += 0.5;
+      }
+    }
+    scores.push({ score, index: i, matchedKeywords });
+  }
+  scores.sort((a, b) => b.score - a.score);
+  const recommendations = [];
+  for (let rank = 0; rank < Math.min(topK, scores.length); rank++) {
+    const { score, index, matchedKeywords } = scores[rank];
+    const job = jobs[index];
+    const normalizedScore = Math.min(score / 10, 1.0);
+    recommendations.push({ job, similarity_score: normalizedScore, rank: rank + 1, matched_keywords: matchedKeywords });
+  }
+  return recommendations;
+}
+
 export default function GameInterface() {
 	const [dayCount, setDayCount] = useState(0);
 	const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
@@ -98,61 +191,63 @@ export default function GameInterface() {
 	};
 
 	useEffect(() => {
-		loadGameScenarios()
-			.then((scenarios) => {
-				console.log("Loaded scenarios:", scenarios);
-				setScenariosData(scenarios);
-				// Create array of indices for CardStack
-				setScenarios(scenarios.map((_: any, index: number) => index));
-				// Set the first scenario as current
-				if (scenarios.length > 0) {
-					const firstScenario = ensureDefaultOptions(scenarios[0]);
-					setCurrentScenario(firstScenario);
-					// Set up choice scenarios
-					choiseScenarios.current = {
-						optionA: firstScenario,
-						optionB: firstScenario,
-					};
-				} else {
-					// Fallback: create a default scenario if no jobs are found
-					console.log("No scenarios found, creating fallback scenario");
-					const fallbackScenario = ensureDefaultOptions({
-						situation: "No jobs available at the moment. Check back later!",
-						job_title: "No Jobs",
-						company_name: "System",
-						location: "N/A",
-						salary: undefined,
-						optionA: { text: "Decline", id: 0 },
-						optionB: { text: "Apply", id: 0 }
-					});
-					setCurrentScenario(fallbackScenario);
-					choiseScenarios.current = {
-						optionA: fallbackScenario,
-						optionB: fallbackScenario,
-					};
-				}
-				setIsLoading(false);
-			})
-			.catch((error) => {
-				console.error("Failed to load scenarios from database:", error);
-				// Fallback: create a default scenario on error
-				const fallbackScenario = ensureDefaultOptions({
-					situation: "Unable to load jobs. Please try again later.",
-					job_title: "Error",
-					company_name: "System",
-					location: "N/A",
-					salary: undefined,
-					optionA: { text: "Decline", id: 0 },
-					optionB: { text: "Apply", id: 0 }
-				});
-				setCurrentScenario(fallbackScenario);
-				choiseScenarios.current = {
-					optionA: fallbackScenario,
-					optionB: fallbackScenario,
-				};
-				setIsLoading(false);
-			});
-	}, []);
+		async function loadAndMatchJobs() {
+    // Try to get resume from localStorage (same as algo page)
+    let resume = localStorage.getItem('resumeText') || localStorage.getItem('resumeData');
+    if (resume && resume.length > 10) {
+      // Extract keywords from resume
+      const keywords = await extractKeywordsWithLLM(resume, ALLOWED_KEYWORDS);
+      if (keywords) {
+        // Fetch jobs
+        const jobs = await getJobs();
+        // Use keyword matching to sort jobs
+        const recommendations = simpleKeywordMatching(keywords, jobs, 50);
+        // Convert to scenarios
+        const scenarios = recommendations.map((rec, idx) => ensureDefaultOptions({
+          situation: `${rec.job.job_title || rec.job.title} at ${rec.job.company_name || rec.job.company} (${rec.job.location || rec.job.job_location})`,
+          job_title: rec.job.job_title || rec.job.title,
+          company_name: rec.job.company_name || rec.job.company,
+          location: rec.job.location || rec.job.job_location,
+          salary: rec.job.salary_formatted,
+          company_rating: rec.job.company_rating,
+          apply_link: rec.job.apply_link,
+          optionA: { text: 'Decline', id: rec.job.jobid || rec.job.id || idx },
+          optionB: { text: 'Apply', id: rec.job.jobid || rec.job.id || idx },
+        }));
+        setScenariosData(scenarios);
+        setScenarios(scenarios.map((_, index) => index));
+        setCurrentScenario(scenarios[0] || null);
+        setIsLoading(false);
+        return;
+      }
+    }
+    // Fallback: load random jobs as before
+    loadGameScenarios()
+      .then((scenarios) => {
+        setScenariosData(scenarios);
+        setScenarios(scenarios.map((_: any, index: number) => index));
+        setCurrentScenario(scenarios[0] || null);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const fallbackScenario = ensureDefaultOptions({
+          situation: "Unable to load jobs. Please try again later.",
+          job_title: "Error",
+          company_name: "System",
+          location: "N/A",
+          salary: undefined,
+          optionA: { text: "Decline", id: 0 },
+          optionB: { text: "Apply", id: 0 }
+        });
+        setCurrentScenario(fallbackScenario);
+        setScenariosData([fallbackScenario]);
+        setScenarios([0]);
+        setIsLoading(false);
+      });
+  }
+  loadAndMatchJobs();
+  // eslint-disable-next-line
+}, []);
 
 	// Check if we need to load more scenarios when currentScenarioIndex changes
 	useEffect(() => {
@@ -201,6 +296,57 @@ export default function GameInterface() {
 				optionA: scenario,
 				optionB: scenario,
 			};
+			
+			// Log the match score for the current card
+			const resume = localStorage.getItem('resumeText') || localStorage.getItem('resumeData');
+			console.log('Resume data found:', resume ? 'Yes' : 'No');
+			console.log('Resume length:', resume?.length || 0);
+			if (resume && resume.length > 10) {
+				console.log('Resume preview:', resume.substring(0, 100) + '...');
+				
+				// Calculate match score for current job using the same logic as simpleKeywordMatching
+				const resumeLower = resume.toLowerCase();
+				const jobDesc = `${scenario.job_title} at ${scenario.company_name} in ${scenario.location}. ${scenario.situation}`;
+				const jobLower = jobDesc.toLowerCase();
+				
+				console.log('Job description:', jobDesc);
+				
+				let score = 0;
+				const matchedKeywords = [];
+				
+				for (const keyword of ALLOWED_KEYWORDS) {
+					if (resumeLower.includes(keyword) && jobLower.includes(keyword)) {
+						score += 1;
+						matchedKeywords.push(keyword);
+					}
+				}
+				
+				// Bonus for environmental jobs
+				if (['garbage', 'collector', 'waste', 'recycling'].some(word => resumeLower.includes(word))) {
+					if (['environmental', 'waste', 'recycling', 'sustainability', 'operations', 'maintenance'].some(word => jobLower.includes(word))) {
+						score += 2;
+					}
+				}
+				
+				// Bonus for general work experience terms
+				const generalTerms = ['experience', 'work', 'job', 'position', 'role', 'responsibility'];
+				for (const term of generalTerms) {
+					if (resumeLower.includes(term) && jobLower.includes(term)) {
+						score += 0.5;
+					}
+				}
+				
+				const normalizedScore = Math.min(score / 10, 1.0);
+				console.log(`Current card match score: ${(normalizedScore * 100).toFixed(1)}% - ${scenario.job_title} at ${scenario.company_name}`);
+				console.log(`Raw score: ${score}`);
+				if (matchedKeywords.length > 0) {
+					console.log(`Matched keywords: ${matchedKeywords.join(', ')}`);
+				} else {
+					console.log('No keywords matched');
+				}
+			} else {
+				console.log('No resume data found in localStorage. Please upload a resume in the profile page first.');
+			}
 		}
 	}, [currentScenarioIndex, scenariosData]);
 
