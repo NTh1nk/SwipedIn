@@ -1,91 +1,62 @@
 import os
 import asyncio
-from sentence_transformers import SentenceTransformer, util
 import torch
 import pickle
 from supabase import create_client, Client
 from typing import List, Dict, Any
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize Supabase client
 supabase_url = os.getenv('SUPABASE_URL', 'http://127.0.0.1:54321')
 supabase_key = os.getenv('SUPABASE_ANON_KEY', 'your-anon-key')
 supabase: Client = create_client(supabase_url, supabase_key)
 
-# Initialize the sentence transformer model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Initialize the sentence transformer model with error handling
+def initialize_model():
+    try:
+        from sentence_transformers import SentenceTransformer, util
+        print("Downloading sentence transformer model...")
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("✅ Model loaded successfully!")
+        return model, util
+    except Exception as e:
+        print(f"❌ Error loading sentence transformer model: {e}")
+        print("Falling back to simple keyword matching...")
+        return None, None
+
+model, util = initialize_model()
 
 def load_jobs_from_supabase() -> List[Dict[str, Any]]:
     """
-    Load jobs from the Job_duplicate table in Supabase
+    Load jobs from the existing job table in Supabase
     """
     try:
-        # Query the Job_duplicate table
-        response = supabase.table('Job_duplicate').select('*').execute()
+        # Query the job table - adjust table name based on what you see in Supabase
+        # Try different possible table names
+        table_names = ['jobs', 'job_listings', 'job_posts', 'definitiondata']
         
-        if response.data:
-            print(f"Loaded {len(response.data)} jobs from Job_duplicate table")
-            return response.data
-        else:
-            print("No jobs found in Job_duplicate table")
-            return []
+        for table_name in table_names:
+            try:
+                print(f"Trying to load from table: {table_name}")
+                response = supabase.table(table_name).select('*').limit(20).execute()
+                
+                if response.data:
+                    print(f"✅ Successfully loaded {len(response.data)} jobs from {table_name} table")
+                    return response.data
+            except Exception as e:
+                print(f"❌ Table {table_name} not found: {e}")
+                continue
+        
+        print("❌ No job table found. Please check your Supabase dashboard for the correct table name.")
+        return []
             
     except Exception as e:
         print(f"Error loading jobs from Supabase: {e}")
-        # Fallback to sample data if table doesn't exist
-        return create_sample_jobs()
-
-def create_sample_jobs() -> List[Dict[str, Any]]:
-    """
-    Create sample job data if the job_duplicate table doesn't exist
-    """
-    sample_jobs = [
-        {
-            "id": 1,
-            "title": "Frontend Developer",
-            "company": "Tech Solutions",
-            "location": "Remote",
-            "description": "Work on modern web apps using React and TypeScript. Experience with Next.js, Tailwind CSS, and modern JavaScript frameworks required."
-        },
-        {
-            "id": 2,
-            "title": "Backend Engineer",
-            "company": "Cloudify",
-            "location": "Berlin, Germany",
-            "description": "Build scalable APIs and microservices with Node.js, Python, and cloud technologies. Experience with AWS, Docker, and Kubernetes preferred."
-        },
-        {
-            "id": 3,
-            "title": "UI/UX Designer",
-            "company": "DesignHub",
-            "location": "New York, NY",
-            "description": "Create beautiful and user-friendly interfaces for web and mobile. Proficiency in Figma, Adobe Creative Suite, and design systems required."
-        },
-        {
-            "id": 4,
-            "title": "Machine Learning Engineer",
-            "company": "AI Innovations",
-            "location": "San Francisco, CA",
-            "description": "Develop and deploy machine learning models using Python, PyTorch, and TensorFlow. Experience with NLP, computer vision, and MLOps preferred."
-        },
-        {
-            "id": 5,
-            "title": "Data Scientist",
-            "company": "DataCorp",
-            "location": "London, UK",
-            "description": "Analyze complex datasets and build predictive models using Python, R, and SQL. Experience with statistical analysis and data visualization required."
-        }
-    ]
-    
-    # Insert sample jobs into Job_duplicate table
-    try:
-        for job in sample_jobs:
-            supabase.table('Job_duplicate').insert(job).execute()
-        print(f"Inserted {len(sample_jobs)} sample jobs into Job_duplicate table")
-    except Exception as e:
-        print(f"Could not insert sample jobs: {e}")
-    
-    return sample_jobs
+        return []
 
 def create_job_descriptions(jobs: List[Dict[str, Any]]) -> List[str]:
     """
@@ -93,67 +64,90 @@ def create_job_descriptions(jobs: List[Dict[str, Any]]) -> List[str]:
     """
     descriptions = []
     for job in jobs:
+        # Handle different possible column names
+        title = job.get('job_title') or job.get('title') or job.get('position') or 'Unknown Position'
+        company = job.get('company_name') or job.get('company') or 'Unknown Company'
+        location = job.get('location') or job.get('job_location') or 'Unknown Location'
+        description = job.get('description') or job.get('description_text') or job.get('job_description') or ''
+        
         # Combine title, company, location, and description
-        description = f"{job.get('title', '')} at {job.get('company', '')} in {job.get('location', '')}. {job.get('description', '')}"
-        descriptions.append(description)
+        description_text = f"{title} at {company} in {location}. {description}"
+        descriptions.append(description_text)
     return descriptions
+
+def simple_keyword_matching(resume_text: str, jobs: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
+    """
+    Simple keyword-based matching as fallback when sentence transformers fail
+    """
+    resume_lower = resume_text.lower()
+    job_descriptions = create_job_descriptions(jobs)
+    
+    scores = []
+    for i, job_desc in enumerate(job_descriptions):
+        job_lower = job_desc.lower()
+        
+        # Simple keyword matching
+        keywords = ['python', 'javascript', 'react', 'node', 'machine learning', 'ai', 'data', 'frontend', 'backend', 'full stack']
+        score = 0
+        
+        for keyword in keywords:
+            if keyword in resume_lower and keyword in job_lower:
+                score += 1
+        
+        scores.append((score, i))
+    
+    # Sort by score (descending)
+    scores.sort(reverse=True)
+    
+    recommendations = []
+    for rank, (score, idx) in enumerate(scores[:top_k]):
+        job = jobs[idx]
+        recommendations.append({
+            'job': job,
+            'similarity_score': score / len(keywords),  # Normalize score
+            'rank': rank + 1
+        })
+    
+    return recommendations
 
 def get_job_recommendations(resume_text: str, jobs: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
     """
     Get job recommendations based on resume text
     """
-    # Create job descriptions
-    job_descriptions = create_job_descriptions(jobs)
+    if model is None or util is None:
+        print("Using simple keyword matching...")
+        return simple_keyword_matching(resume_text, jobs, top_k)
     
-    # Encode resume and job descriptions
-    resume_embedding = model.encode(resume_text, convert_to_tensor=True)
-    job_embeddings = model.encode(job_descriptions, convert_to_tensor=True)
-    
-    # Calculate similarity scores
-    similarity_scores = util.cos_sim(resume_embedding, job_embeddings)[0]
-    
-    # Get top k recommendations
-    top_indices = torch.topk(similarity_scores, k=min(top_k, len(jobs))).indices
-    
-    recommendations = []
-    for idx in top_indices:
-        job = jobs[idx]
-        score = similarity_scores[idx].item()
-        recommendations.append({
-            'job': job,
-            'similarity_score': score,
-            'rank': len(recommendations) + 1
-        })
-    
-    return recommendations
-
-def save_embeddings(jobs: List[Dict[str, Any]], filename: str = "job_embeddings.pt"):
-    """
-    Save job embeddings for faster future use
-    """
-    job_descriptions = create_job_descriptions(jobs)
-    job_embeddings = model.encode(job_descriptions, convert_to_tensor=True)
-    
-    # Save embeddings and job data
-    torch.save(job_embeddings, filename)
-    with open("job_data.pkl", "wb") as f:
-        pickle.dump(jobs, f)
-    
-    print(f"Saved embeddings to {filename} and job data to job_data.pkl")
-
-def load_embeddings(filename: str = "job_embeddings.pt") -> tuple:
-    """
-    Load saved embeddings and job data
-    """
+    # Use sentence transformers
     try:
-        job_embeddings = torch.load(filename)
-        with open("job_data.pkl", "rb") as f:
-            jobs = pickle.load(f)
-        print(f"Loaded embeddings from {filename}")
-        return job_embeddings, jobs
-    except FileNotFoundError:
-        print(f"Embeddings file {filename} not found. Please run save_embeddings first.")
-        return None, None
+        # Create job descriptions
+        job_descriptions = create_job_descriptions(jobs)
+        
+        # Encode resume and job descriptions
+        resume_embedding = model.encode(resume_text, convert_to_tensor=True)
+        job_embeddings = model.encode(job_descriptions, convert_to_tensor=True)
+        
+        # Calculate similarity scores
+        similarity_scores = util.cos_sim(resume_embedding, job_embeddings)[0]
+        
+        # Get top k recommendations
+        top_indices = torch.topk(similarity_scores, k=min(top_k, len(jobs))).indices
+        
+        recommendations = []
+        for idx in top_indices:
+            job = jobs[idx]
+            score = similarity_scores[idx].item()
+            recommendations.append({
+                'job': job,
+                'similarity_score': score,
+                'rank': len(recommendations) + 1
+            })
+        
+        return recommendations
+    except Exception as e:
+        print(f"Error with sentence transformers: {e}")
+        print("Falling back to keyword matching...")
+        return simple_keyword_matching(resume_text, jobs, top_k)
 
 def main():
     """
@@ -165,6 +159,13 @@ def main():
     if not jobs:
         print("No jobs available. Exiting.")
         return
+    
+    # Show sample job structure
+    print(f"\nSample job structure:")
+    if jobs:
+        sample_job = jobs[0]
+        for key, value in sample_job.items():
+            print(f"  {key}: {str(value)[:50]}...")
     
     # Example resume text
     resume_text = "Machine learning engineer with 3 years of experience in Python, PyTorch, and natural language processing. Skilled in building and deploying ML models, working with large datasets, and collaborating with cross-functional teams."
@@ -182,15 +183,16 @@ def main():
         score = rec['similarity_score']
         rank = rec['rank']
         
-        print(f"\n{rank}. {job.get('title', 'N/A')} at {job.get('company', 'N/A')}")
-        print(f"   Location: {job.get('location', 'N/A')}")
+        # Handle different possible column names
+        title = job.get('job_title') or job.get('title') or 'N/A'
+        company = job.get('company_name') or job.get('company') or 'N/A'
+        location = job.get('location') or job.get('job_location') or 'N/A'
+        description = job.get('description') or job.get('description_text') or job.get('job_description') or 'N/A'
+        
+        print(f"\n{rank}. {title} at {company}")
+        print(f"   Location: {location}")
         print(f"   Similarity Score: {score:.4f}")
-        print(f"   Description: {job.get('description', 'N/A')[:100]}...")
-    
-    # Optionally save embeddings for faster future use
-    save_choice = input("\nWould you like to save embeddings for faster future use? (y/n): ")
-    if save_choice.lower() == 'y':
-        save_embeddings()
+        print(f"   Description: {description[:100]}...")
 
 if __name__ == "__main__":
     main() 
