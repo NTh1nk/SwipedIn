@@ -82,30 +82,71 @@ def simple_keyword_matching(resume_text: str, jobs: List[Dict[str, Any]], top_k:
     resume_lower = resume_text.lower()
     job_descriptions = create_job_descriptions(jobs)
     
+    # Expanded keyword list with more job-related terms
+    keywords = [
+        # Technical skills
+        'python', 'javascript', 'react', 'node', 'java', 'c++', 'c#', 'php', 'ruby', 'go', 'rust',
+        'html', 'css', 'sql', 'mongodb', 'postgresql', 'mysql', 'redis', 'docker', 'kubernetes',
+        'aws', 'azure', 'gcp', 'cloud', 'devops', 'ci/cd', 'git', 'github', 'agile', 'scrum',
+        
+        # Job roles and industries
+        'developer', 'engineer', 'programmer', 'coder', 'architect', 'analyst', 'scientist',
+        'manager', 'lead', 'senior', 'junior', 'full stack', 'frontend', 'backend', 'mobile',
+        'web', 'software', 'hardware', 'system', 'network', 'security', 'database', 'data',
+        'machine learning', 'ai', 'artificial intelligence', 'nlp', 'computer vision', 'deep learning',
+        'designer', 'ui', 'ux', 'user interface', 'user experience', 'product', 'project',
+        'business', 'marketing', 'sales', 'customer', 'support', 'operations', 'finance',
+        'hr', 'human resources', 'legal', 'medical', 'healthcare', 'education', 'research',
+        
+        # General work terms
+        'experience', 'years', 'team', 'collaboration', 'communication', 'leadership',
+        'problem solving', 'analysis', 'planning', 'organization', 'management',
+        'remote', 'onsite', 'hybrid', 'full time', 'part time', 'contract', 'freelance',
+        
+        # Education and certifications
+        'degree', 'bachelor', 'master', 'phd', 'certification', 'certified', 'training',
+        'course', 'workshop', 'seminar', 'conference', 'meetup'
+    ]
+    
     scores = []
     for i, job_desc in enumerate(job_descriptions):
         job_lower = job_desc.lower()
         
-        # Simple keyword matching
-        keywords = ['python', 'javascript', 'react', 'node', 'machine learning', 'ai', 'data', 'frontend', 'backend', 'full stack']
+        # Calculate keyword matches
         score = 0
+        matched_keywords = []
         
         for keyword in keywords:
             if keyword in resume_lower and keyword in job_lower:
                 score += 1
+                matched_keywords.append(keyword)
         
-        scores.append((score, i))
+        # Add bonus for exact phrase matches
+        if any(word in resume_lower for word in ['garbage', 'collector', 'waste', 'recycling']):
+            if any(word in job_lower for word in ['environmental', 'waste', 'recycling', 'sustainability', 'operations', 'maintenance']):
+                score += 2  # Bonus for environmental/recycling related jobs
+        
+        # Add bonus for general work experience terms
+        general_terms = ['experience', 'work', 'job', 'position', 'role', 'responsibility']
+        for term in general_terms:
+            if term in resume_lower and term in job_lower:
+                score += 0.5
+        
+        scores.append((score, i, matched_keywords))
     
     # Sort by score (descending)
     scores.sort(reverse=True)
     
     recommendations = []
-    for rank, (score, idx) in enumerate(scores[:top_k]):
+    for rank, (score, idx, matched_keywords) in enumerate(scores[:top_k]):
         job = jobs[idx]
+        normalized_score = min(score / 10, 1.0)  # Normalize to 0-1 range
+        
         recommendations.append({
             'job': job,
-            'similarity_score': score / len(keywords),  # Normalize score
-            'rank': rank + 1
+            'similarity_score': normalized_score,
+            'rank': rank + 1,
+            'matched_keywords': matched_keywords
         })
     
     return recommendations
@@ -168,7 +209,7 @@ def main():
             print(f"  {key}: {str(value)[:50]}...")
     
     # Example resume text
-    resume_text = "Machine learning engineer with 3 years of experience in Python, PyTorch, and natural language processing. Skilled in building and deploying ML models, working with large datasets, and collaborating with cross-functional teams."
+    resume_text = "Garbage collector."
     
     print(f"\nAnalyzing resume: {resume_text[:100]}...")
     
@@ -192,6 +233,8 @@ def main():
         print(f"\n{rank}. {title} at {company}")
         print(f"   Location: {location}")
         print(f"   Similarity Score: {score:.4f}")
+        if hasattr(rec, 'matched_keywords') and rec['matched_keywords']:
+            print(f"   Matched Keywords: {', '.join(rec['matched_keywords'])}")
         print(f"   Description: {description[:100]}...")
 
 if __name__ == "__main__":
