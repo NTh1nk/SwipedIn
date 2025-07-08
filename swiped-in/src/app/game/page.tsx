@@ -222,32 +222,32 @@ export default function GameInterface() {
       }
     }
     // Fallback: load random jobs as before
-    loadGameScenarios()
-      .then((scenarios) => {
-        setScenariosData(scenarios);
-        setScenarios(scenarios.map((_: any, index: number) => index));
+		loadGameScenarios()
+			.then((scenarios) => {
+				setScenariosData(scenarios);
+				setScenarios(scenarios.map((_: any, index: number) => index));
         setCurrentScenario(scenarios[0] || null);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        const fallbackScenario = ensureDefaultOptions({
-          situation: "Unable to load jobs. Please try again later.",
-          job_title: "Error",
-          company_name: "System",
-          location: "N/A",
-          salary: undefined,
-          optionA: { text: "Decline", id: 0 },
-          optionB: { text: "Apply", id: 0 }
-        });
-        setCurrentScenario(fallbackScenario);
+				setIsLoading(false);
+			})
+			.catch((error) => {
+				const fallbackScenario = ensureDefaultOptions({
+					situation: "Unable to load jobs. Please try again later.",
+					job_title: "Error",
+					company_name: "System",
+					location: "N/A",
+					salary: undefined,
+					optionA: { text: "Decline", id: 0 },
+					optionB: { text: "Apply", id: 0 }
+				});
+				setCurrentScenario(fallbackScenario);
         setScenariosData([fallbackScenario]);
         setScenarios([0]);
-        setIsLoading(false);
-      });
+				setIsLoading(false);
+			});
   }
   loadAndMatchJobs();
   // eslint-disable-next-line
-}, []);
+	}, []);
 
 	// Check if we need to load more scenarios when currentScenarioIndex changes
 	useEffect(() => {
@@ -314,10 +314,35 @@ export default function GameInterface() {
 				let score = 0;
 				const matchedKeywords = [];
 				
+				// Check for exact keyword matches
 				for (const keyword of ALLOWED_KEYWORDS) {
 					if (resumeLower.includes(keyword) && jobLower.includes(keyword)) {
 						score += 1;
 						matchedKeywords.push(keyword);
+					}
+				}
+				
+				// Check for partial matches and basic terms
+				const basicTerms = ['coding', 'code', 'programming', 'program', 'develop', 'development', 'math', 'mathematics', 'good', 'skill', 'skills'];
+				for (const term of basicTerms) {
+					if (resumeLower.includes(term) && jobLower.includes(term)) {
+						score += 0.5;
+						matchedKeywords.push(term);
+					}
+				}
+				
+				// Check for partial matches in job titles/descriptions
+				if (resumeLower.includes('coding') || resumeLower.includes('code')) {
+					if (jobLower.includes('engineer') || jobLower.includes('developer') || jobLower.includes('programmer')) {
+						score += 1;
+						matchedKeywords.push('coding->engineering');
+					}
+				}
+				
+				if (resumeLower.includes('math')) {
+					if (jobLower.includes('analyst') || jobLower.includes('scientist') || jobLower.includes('data')) {
+						score += 1;
+						matchedKeywords.push('math->analysis');
 					}
 				}
 				
