@@ -326,7 +326,7 @@ export default function GameInterface() {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "ArrowLeft") {
 				event.preventDefault();
-				if (currentScenarioIndex > 0) {
+				if (currentScenarioIndex < scenariosData.length - 1) {
 					mainControls.start({
 						x: -200,
 					});
