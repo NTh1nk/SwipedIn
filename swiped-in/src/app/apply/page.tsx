@@ -44,17 +44,13 @@ export default function ApplyPage() {
     }
   }, []);
 
-  const handleApply = (jobid?: number) => {
-  
-    const applicationLink = jobs.find(job => job.jobid === jobid)?.apply_link;
-    if (applicationLink) {
-      window.open(applicationLink);
+  const handleApply = (job: AppliedJob) => {
+    if (job.apply_link) {
+      window.open(job.apply_link, '_blank');
     } else {
       alert("No application link found for this job.");
-      console.log("jobs" + jobs);
+      console.log("Job without apply link:", job);
     } 
-
-    // Here you could trigger a real application process
   };
 
   const handleArchive = (jobToArchive: AppliedJob) => {
@@ -271,7 +267,7 @@ export default function ApplyPage() {
                     </button>
                     <button
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
-                      onClick={() => handleApply(job.jobid)}
+                      onClick={() => handleApply(job)}
                     >
                       Apply
                     </button>
