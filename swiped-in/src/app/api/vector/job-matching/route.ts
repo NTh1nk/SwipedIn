@@ -36,7 +36,7 @@ async function loadJobsFromSupabase() {
         const { data, error } = await supabase
           .from(tableName)
           .select('*')
-          .limit(100);
+          .limit(1000);
         
         if (error) {
           console.log(`[DEBUG] Error with table ${tableName}:`, error.message);
