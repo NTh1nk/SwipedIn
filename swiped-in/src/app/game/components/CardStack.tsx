@@ -88,11 +88,11 @@ export function CardStack({
                                                     <p className="font-mono text-sm md:text-base mb-10">
                                                         {scenariosData[i]?.situation || "Loading..."}
                                                     </p>
-                                                    {scenariosData[i]?.company_rating !== undefined && (
+                                                    {scenariosData[i]?.company_rating !== undefined && scenariosData[i]?.company_rating !== null && (
                                                         <div className="flex items-center justify-center mb-5">
                                                             <span className="bg-yellow-100 border  border-yellow-300 rounded-full px-3 py-1 text-yellow-800 font-semibold text-xs flex items-center gap-1">
                                                                 ⭐
-                                                                <span>{scenariosData[i].company_rating.toFixed(1)}</span>
+                                                                <span>{scenariosData[i].company_rating?.toFixed(1) || 'N/A'}</span>
                                                             </span>
                                                         </div>
                                                     )}

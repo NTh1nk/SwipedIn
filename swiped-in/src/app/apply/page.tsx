@@ -224,7 +224,7 @@ export default function ApplyPage() {
                     {job.salary_formatted && (
                       <div className="text-green-700 font-semibold mt-1">💰 {job.salary_formatted}</div>
                     )}
-                    {job.company_rating !== undefined && (
+                    {job.company_rating !== undefined && job.company_rating !== null && (
                       <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
                     )}
                   </div>
@@ -254,7 +254,7 @@ export default function ApplyPage() {
                     {job.salary_formatted && (
                       <div className="text-green-700 font-semibold mt-1">💰 {job.salary_formatted}</div>
                     )}
-                    {job.company_rating !== undefined && (
+                    {job.company_rating !== undefined && job.company_rating !== null && (
                       <div className="text-yellow-600 font-semibold mt-1">⭐ {job.company_rating.toFixed(1)}</div>
                     )}
                   </div>
