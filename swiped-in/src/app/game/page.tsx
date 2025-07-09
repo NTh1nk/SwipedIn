@@ -350,6 +350,8 @@ export default function GameInterface() {
 					});
 				}
 			}
+			setDayCount((prev) => prev + 1); //day count increment
+
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
