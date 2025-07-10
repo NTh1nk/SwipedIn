@@ -69,6 +69,7 @@ export default function LandingPage() {
             <span>🚀</span>
             Get Started
           </a>
+          {/*
           <a
             href="/game"
             className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
@@ -76,6 +77,7 @@ export default function LandingPage() {
             <span>🎮</span>
             Try Demo
           </a>
+          */}
         </div>
       </header>
 
