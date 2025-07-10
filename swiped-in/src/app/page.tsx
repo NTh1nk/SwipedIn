@@ -57,8 +57,9 @@ export default function LandingPage() {
         </p>
         
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl text-center mb-8 leading-relaxed">
-          Discover jobs in saf fransicsco  dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal. 
-          Swipe right to apply, left to pass—just like dating, but for your career.
+      Discover jobs in San Francisco, find your dream job with a swipe! SwipedIn makes job hunting fun, fast, and personal.
+       Swipe right to apply, left to pass — just like dating, but for your career in SF’s hottest companies.
+
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
