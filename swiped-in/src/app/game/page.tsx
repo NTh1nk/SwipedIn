@@ -142,6 +142,65 @@ function simpleKeywordMatching(resumeText: string, jobs: any[], topK: number = 5
   return recommendations;
 }
 
+// Cosine similarity function for vector comparisons
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  if (vecA.length !== vecB.length) {
+    throw new Error('Vectors must have the same length');
+  }
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// Vector-based job matching using embeddings
+async function vectorBasedJobMatching(resumeText: string, jobs: any[], topK: number = 20) {
+  try {
+    console.log('[VECTOR] Starting vector-based job matching...');
+    // Generate embedding for resume
+    const response = await fetch('/api/vector/embedding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: resumeText }),
+    });
+    if (!response.ok) {
+      console.error('[VECTOR] Failed to generate resume embedding');
+      return [];
+    }
+    const { embedding: resumeEmbedding } = await response.json();
+    console.log('[VECTOR] Resume embedding (start):', resumeEmbedding.slice(0, 5));
+    // Get job matches using vector similarity
+    const matchResponse = await fetch('/api/vector/job-matching', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embedding: resumeEmbedding }),
+    });
+    if (!matchResponse.ok) {
+      console.error('[VECTOR] Failed to get job matches');
+      return [];
+    }
+    const { matches } = await matchResponse.json();
+    console.log('[VECTOR] Found', matches.length, 'vector-based matches');
+    // Convert matches to the expected format
+    const recommendations = matches.map((match: any, index: number) => ({
+      job: match.job,
+      similarity_score: match.score,
+      rank: index + 1,
+      matched_keywords: [],
+      match_type: 'vector',
+    }));
+    return recommendations.slice(0, topK);
+  } catch (error) {
+    console.error('[VECTOR] Vector matching failed:', error);
+    return [];
+  }
+}
+
 export default function GameInterface() {
 	const [dayCount, setDayCount] = useState(0);
 	const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
@@ -192,71 +251,59 @@ export default function GameInterface() {
 
 	useEffect(() => {
 		async function loadAndMatchJobs() {
-    // Try to get resume from localStorage (same as algo page)
     let resume = localStorage.getItem('resumeText') || localStorage.getItem('resumeData');
     if (resume && resume.length > 10) {
-      // Extract keywords from resume
-      const keywords = await extractKeywordsWithLLM(resume, ALLOWED_KEYWORDS);
-      if (keywords) {
-        // Fetch 100 jobs from Supabase to find the best matches
-        const { data: allJobs, error } = await supabase
-          .from('jobs')
-          .select('*')
-          .order('jobid', { ascending: true })
-          .limit(100);
-        
-        if (error) {
-          console.error('Error fetching jobs:', error);
-          // Fallback to random jobs
-          loadGameScenarios()
-            .then((scenarios) => {
-              setScenariosData(scenarios);
-              setScenarios(scenarios.map((_: any, index: number) => index));
-              setCurrentScenario(scenarios[0] || null);
-              setIsLoading(false);
-            })
-            .catch((error) => {
-              const fallbackScenario = ensureDefaultOptions({
-                situation: "Unable to load jobs. Please try again later.",
-                job_title: "Error",
-                company_name: "System",
-                location: "N/A",
-                salary: undefined,
-                optionA: { text: "Decline", id: 0 },
-                optionB: { text: "Apply", id: 0 }
-              });
-              setCurrentScenario(fallbackScenario);
-              setScenariosData([fallbackScenario]);
-              setScenarios([0]);
-              setIsLoading(false);
+      console.log('[GAME] Resume found, using vector-based matching...');
+      const { data: allJobs, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('jobid', { ascending: true })
+        .limit(500);
+      if (error) {
+        console.error('Error fetching jobs:', error);
+        loadGameScenarios()
+          .then((scenarios) => {
+            setScenariosData(scenarios);
+            setScenarios(scenarios.map((_: any, index: number) => index));
+            setCurrentScenario(scenarios[0] || null);
+            setIsLoading(false);
+          })
+          .catch((error) => {
+            const fallbackScenario = ensureDefaultOptions({
+              situation: "Unable to load jobs. Please try again later.",
+              job_title: "Error",
+              company_name: "System",
+              location: "N/A",
+              salary: undefined,
+              optionA: { text: "Decline", id: 0 },
+              optionB: { text: "Apply", id: 0 }
             });
-          return;
-        }
-        
-        console.log(`Loaded ${allJobs?.length || 0} jobs from database`);
-        
-        // Use keyword matching to find the best 10 jobs from the 100
-        const recommendations = simpleKeywordMatching(keywords, allJobs || [], 10);
-        console.log(`Selected top ${recommendations.length} jobs by match score`);
-        
-        // Convert only the top 10 to scenarios
-        const scenarios = recommendations.map((rec, idx) => ensureDefaultOptions({
-          situation: `${rec.job.job_title || rec.job.title} at ${rec.job.company_name || rec.job.company} (${rec.job.location || rec.job.job_location})`,
-          job_title: rec.job.job_title || rec.job.title,
-          company_name: rec.job.company_name || rec.job.company,
-          location: rec.job.location || rec.job.job_location,
-          salary: rec.job.salary_formatted,
-          company_rating: rec.job.company_rating,
-          apply_link: rec.job.apply_link,
-          optionA: { text: 'Decline', id: rec.job.jobid || rec.job.id || idx },
-          optionB: { text: 'Apply', id: rec.job.jobid || rec.job.id || idx },
-        }));
-        setScenariosData(scenarios);
-        setScenarios(scenarios.map((_, index) => index));
-        setCurrentScenario(scenarios[0] || null);
-        setIsLoading(false);
+            setCurrentScenario(fallbackScenario);
+            setScenariosData([fallbackScenario]);
+            setScenarios([0]);
+            setIsLoading(false);
+          });
         return;
       }
+      console.log(`[GAME] Loaded ${allJobs?.length || 0} jobs from database`);
+      const recommendations = await vectorBasedJobMatching(resume, allJobs || [], 20);
+      console.log(`[GAME] Selected top ${recommendations.length} jobs by vector similarity`);
+      const scenarios = recommendations.map((rec: any, idx: number) => ensureDefaultOptions({
+        situation: `${rec.job.job_title || rec.job.title} at ${rec.job.company_name || rec.job.company} (${rec.job.location || rec.job.job_location})`,
+        job_title: rec.job.job_title || rec.job.title,
+        company_name: rec.job.company_name || rec.job.company,
+        location: rec.job.location || rec.job.job_location,
+        salary: rec.job.salary_formatted,
+        company_rating: rec.job.company_rating,
+        apply_link: rec.job.apply_link,
+        optionA: { text: 'Decline', id: rec.job.jobid || rec.job.id || idx },
+        optionB: { text: 'Apply', id: rec.job.jobid || rec.job.id || idx },
+      }));
+      setScenariosData(scenarios);
+      setScenarios(scenarios.map((_: any, index: number) => index));
+      setCurrentScenario(scenarios[0] || null);
+      setIsLoading(false);
+      return;
     }
     // Fallback: load random jobs as before
     loadGameScenarios()
@@ -366,86 +413,39 @@ export default function GameInterface() {
 		if (scenariosData.length > 0 && currentScenarioIndex < scenariosData.length) {
 			const scenario = ensureDefaultOptions(scenariosData[currentScenarioIndex]);
 			setCurrentScenario(scenario);
-			// Update choice scenarios for the current job
 			choiseScenarios.current = {
 				optionA: scenario,
 				optionB: scenario,
 			};
-			
-			// Log the match score for the current card
 			const resume = localStorage.getItem('resumeText') || localStorage.getItem('resumeData');
-			console.log('Resume data found:', resume ? 'Yes' : 'No');
-			console.log('Resume length:', resume?.length || 0);
 			if (resume && resume.length > 10) {
-				console.log('Resume preview:', resume.substring(0, 100) + '...');
-				
-				// Calculate match score for current job using the same logic as simpleKeywordMatching
-				const resumeLower = resume.toLowerCase();
-				const jobDesc = `${scenario.job_title} at ${scenario.company_name} in ${scenario.location}. ${scenario.situation}`;
-				const jobLower = jobDesc.toLowerCase();
-				
-				console.log('Job description:', jobDesc);
-				
-				let score = 0;
-				const matchedKeywords = [];
-				
-				// Check for exact keyword matches
-				for (const keyword of ALLOWED_KEYWORDS) {
-					if (resumeLower.includes(keyword) && jobLower.includes(keyword)) {
-						score += 1;
-						matchedKeywords.push(keyword);
+				(async () => {
+					try {
+						const response = await fetch('/api/vector/embedding', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ text: resume }),
+						});
+						if (response.ok) {
+							const { embedding: resumeEmbedding } = await response.json();
+							console.log('[VECTOR] Resume embedding (start):', resumeEmbedding.slice(0, 5));
+							const jobText = `${scenario.job_title} at ${scenario.company_name} in ${scenario.location}. ${scenario.situation}`;
+							const jobResponse = await fetch('/api/vector/embedding', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ text: jobText }),
+							});
+							if (jobResponse.ok) {
+								const { embedding: jobEmbedding } = await jobResponse.json();
+								console.log('[VECTOR] Job embedding (start):', jobEmbedding.slice(0, 5));
+								const similarity = cosineSimilarity(resumeEmbedding, jobEmbedding);
+								console.log(`[VECTOR] Current card vector similarity: ${(similarity * 100).toFixed(1)}% - ${scenario.job_title} at ${scenario.company_name}`);
+							}
+						}
+					} catch (error) {
+						console.log('[VECTOR] Could not calculate vector similarity');
 					}
-				}
-				
-				// Check for partial matches and basic terms
-				const basicTerms = ['coding', 'code', 'programming', 'program', 'develop', 'development', 'math', 'mathematics', 'good', 'skill', 'skills'];
-				for (const term of basicTerms) {
-					if (resumeLower.includes(term) && jobLower.includes(term)) {
-						score += 0.5;
-						matchedKeywords.push(term);
-					}
-				}
-				
-				// Check for partial matches in job titles/descriptions
-				if (resumeLower.includes('coding') || resumeLower.includes('code')) {
-					if (jobLower.includes('engineer') || jobLower.includes('developer') || jobLower.includes('programmer')) {
-						score += 1;
-						matchedKeywords.push('coding->engineering');
-					}
-				}
-				
-				if (resumeLower.includes('math')) {
-					if (jobLower.includes('analyst') || jobLower.includes('scientist') || jobLower.includes('data')) {
-						score += 1;
-						matchedKeywords.push('math->analysis');
-					}
-				}
-				
-				// Bonus for environmental jobs
-				if (['garbage', 'collector', 'waste', 'recycling'].some(word => resumeLower.includes(word))) {
-					if (['environmental', 'waste', 'recycling', 'sustainability', 'operations', 'maintenance'].some(word => jobLower.includes(word))) {
-						score += 2;
-					}
-				}
-				
-				// Bonus for general work experience terms
-				const generalTerms = ['experience', 'work', 'job', 'position', 'role', 'responsibility'];
-				for (const term of generalTerms) {
-					if (resumeLower.includes(term) && jobLower.includes(term)) {
-						score += 0.5;
-					}
-				}
-				
-				const normalizedScore = Math.min(score / 10, 1.0);
-				console.log(`Current card match score: ${(normalizedScore * 100).toFixed(1)}% - ${scenario.job_title} at ${scenario.company_name}`);
-				console.log(`Raw score: ${score}`);
-				if (matchedKeywords.length > 0) {
-					console.log(`Matched keywords: ${matchedKeywords.join(', ')}`);
-				} else {
-					console.log('No keywords matched');
-				}
-			} else {
-				console.log('No resume data found in localStorage. Please upload a resume in the profile page first.');
+				})();
 			}
 		}
 	}, [currentScenarioIndex, scenariosData]);
