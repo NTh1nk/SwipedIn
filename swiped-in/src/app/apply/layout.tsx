@@ -11,7 +11,7 @@ export const metadata: Metadata = {
         url: "/logo.svg",
         width: 1200,
         height: 630,
-        alt: "SwipedIn Logo",
+        alt: "SwipedIn Logo - Job Applications",
       },
     ],
   },
