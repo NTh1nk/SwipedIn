@@ -155,6 +155,30 @@ npm start       # Next.js start (production)
 ```
 
 ## License
-Add your license here.
+
+```
+ALL RIGHTS RESERVED - NO PERMISSION GRANTED
+
+Copyright (c) 2025 Johannes Landbo. All rights reserved.
+
+This software and associated documentation files (the "Software") are the 
+exclusive property of Johannes Landbo. No permission is granted to use, copy, 
+modify, merge, publish, distribute, sublicense, and/or sell copies of the 
+Software, or to permit persons to whom the Software is furnished to do so.
+
+ANY USE OF THIS SOFTWARE WITHOUT EXPRESS WRITTEN PERMISSION FROM THE 
+COPYRIGHT HOLDER IS STRICTLY PROHIBITED AND CONSTITUTES COPYRIGHT 
+INFRINGEMENT.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+```
 
 
